@@ -1,0 +1,4 @@
+node_modules/
+fieldpulse.db
+uploads/
+.env

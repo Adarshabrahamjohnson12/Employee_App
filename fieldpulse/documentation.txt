@@ -1,0 +1,132 @@
+========================================================================
+                 FIELDPULSE — SYSTEM DOCUMENTATION
+========================================================================
+
+FieldPulse is a professional web-based employee performance tracking, GPS 
+check-in, and interactive task assignment platform designed for GoldPE.
+
+The application has been upgraded to a spacious, premium desktop split 
+layout, featuring a backend-driven architecture backed by Node.js, 
+Express, and SQLite.
+
+------------------------------------------------------------------------
+1. CURRENTLY IMPLEMENTED FEATURES
+------------------------------------------------------------------------
+
+A. Production-Ready Desktop UI Layout
+   - Fluid 100vw desktop dashboard with a sleek Left Sidebar navigation panel
+     styled in GoldPE Brand Navy Deep (#0B132B) and Gold accenting.
+   - Profile footer showing current user's profile card and a sign-out button.
+   - Smooth desktop workspace views replacing the narrow mobile phone frames.
+
+B. Interactive Employee-Manager Task System
+   - **Manager Task Assignment**: Managers can assign new tasks directly from
+     the "Team" dashboard to any regional agent. Input fields include Task Title,
+     Category (Calibration, Site Visit, MoU Pickup, Client Meeting), Target 
+     Location, and Client Reference ID.
+   - **Employee Structured Reporting**: Employees can report task completion 
+     by choosing a Job Status ("Completed", "Blocked", "In Progress"), selection 
+     of Reporting Team ("Embedded", "Mechanical", "Software", "HR"), and writing 
+     detailed text Remarks of what they completed.
+   - **Geo-Verification**: Completing a task captures live HTML5 GPS location 
+     coordinates, validating coordinates against target site ranges.
+   - **Syncing & Reporting**: The manager can click on any employee to see a 
+     full historic list of assigned tasks, complete with their status, team, 
+     remarks, and geo-verified coordinates on the employee's detail view.
+
+C. Employee Check-In & OD (On Duty) Portals
+   - Tap-to-Verify shift log capturing real-time device latitude, longitude,
+     and accuracy bounds.
+   - On Duty (OD) travel log allows agents to declare client destination travel.
+     Managers can track arrival statuses and coordinates when agents arrive.
+
+D. Fund & Expense Reimbursements
+   - Submit new reimbursements with Category, Amount, description, and JPEG 
+     image receipt attachments.
+   - Multi-part multipart/form-data upload syncs receipts to server disk.
+   - Managers approve/reject claims in a unified expense approval queue.
+
+E. Team Statistics & Analytics
+   - Real-time weekly work hours line charts, regional punctuality counters,
+     streaks, and attendance logs.
+
+------------------------------------------------------------------------
+2. SYSTEM ARCHITECTURE & API ENDPOINTS
+------------------------------------------------------------------------
+
+The backend is an Express server running SQLite (via sql.js for native cross-
+platform execution). All routes are protected by JWT Bearer auth.
+
+- POST  /api/auth/login        -> User login session token issuance
+- GET   /api/employees/me      -> Current employee details & stats
+- GET   /api/employees         -> Get all regional agents (Manager only)
+- POST  /api/tasks             -> Assign a new task (Manager only)
+- PATCH /api/tasks/:id/complete-> Submit structured task report + GPS
+- POST  /api/reimbursements    -> Submit new expense claim
+- POST  /api/reimbursements/:id/receipt -> Upload receipt image (Multer)
+- PATCH /api/reimbursements/:id -> Approve/Reject reimbursement (Manager)
+
+------------------------------------------------------------------------
+3. DEFAULT ACCESS CREDENTIALS
+------------------------------------------------------------------------
+
+Use these credentials to test employee and manager dashboard interactions:
+- Agent (Arjun Mehta):   ID: `FP-WR-001`  / Password: `arjun123`
+- Agent (Sneha Kulkarni): ID: `FP-WR-004`  / Password: `sneha123`
+- Region Manager:         ID: `MANAGER`    / Password: `manager@123`
+
+------------------------------------------------------------------------
+4. PRODUCTION HOSTING & DEPLOYMENT METHODS
+------------------------------------------------------------------------
+
+### METHOD A: Traditional VM / Cloud VPS (AWS EC2, DigitalOcean, Linode)
+1. **Prepare Server VM**: Spin up an Ubuntu LTS server.
+2. **Install Node.js & Git**: Install Node.js (v18+) and npm on the VM.
+3. **Deploy Code**: Clone your repository to `/var/www/fieldpulse`.
+4. **Build Frontend Bundle**:
+   $ cd fieldpulse
+   $ npm install
+   $ npm run build
+   (This creates a static production bundle under `fieldpulse/dist`).
+5. **Configure Express to Serve Static Build**:
+   Update `server.js` to serve frontend production build:
+   `app.use(express.static(path.join(__dirname, '../fieldpulse/dist')));`
+6. **Set Environment Variables**: Set `PORT=80` (or `3001` and reverse-proxy).
+7. **Configure Process Manager (PM2)**:
+   $ npm install -g pm2
+   $ pm2 start server.js --name fieldpulse-app
+   $ pm2 save
+   (Ensures the app restarts automatically if the server crashes/reboots).
+
+### METHOD B: Docker Containerized Deployment (Recommended)
+1. Create a `Dockerfile` in the root merging frontend build and backend:
+   ```dockerfile
+   # Stage 1: Build Frontend
+   FROM node:18-alpine AS frontend-builder
+   WORKDIR /app/frontend
+   COPY fieldpulse/package*.json ./
+   RUN npm install
+   COPY fieldpulse/ ./
+   RUN npm run build
+
+   # Stage 2: Serve Backend + Static Assets
+   FROM node:18-alpine
+   WORKDIR /app/server
+   COPY fieldpulse-api/package*.json ./
+   RUN npm install --production
+   COPY fieldpulse-api/ ./
+   COPY --from=frontend-builder /app/frontend/dist ./public
+   EXPOSE 3001
+   CMD ["node", "server.js"]
+   ```
+2. Build and run the docker image:
+   $ docker build -t goldpe-fieldpulse .
+   $ docker run -d -p 80:3001 --name fieldpulse goldpe-fieldpulse
+
+### METHOD C: PaaS Hosting (Render, Railway, Heroku)
+1. Push the repository to GitHub.
+2. Link the repository to Render or Railway.
+3. Define the build command as `npm run build` inside the React client folder, 
+   and the start command as `node server.js` inside the api folder.
+4. Set environment variables (e.g. JWT_SECRET).
+========================================================================
