@@ -4,6 +4,7 @@ import { Card } from "../components/Card";
 import { SectionLabel } from "../components/SectionLabel";
 import { StatusPill } from "../components/StatusPill";
 import { useApp } from "../context/AppContext";
+import { getImageUrl } from "../api/client";
 import { MapPin, ChevronRight, Search } from "lucide-react";
 
 const FILTERS = ["All", "Checked In", "On OD", "Absent"];
@@ -207,7 +208,7 @@ export function TeamScreen({ onSelectEmp }) {
                   border: `2px solid ${emp.onOD ? TOKENS.blue : emp.checkedIn ? TOKENS.success : TOKENS.border}`,
                 }}>
                   {emp.selfie
-                    ? <img src={emp.selfie} alt="" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
+                    ? <img src={getImageUrl(emp.selfie)} alt="" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
                     : emp.initials
                   }
                 </div>

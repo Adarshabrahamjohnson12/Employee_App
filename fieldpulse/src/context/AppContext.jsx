@@ -162,22 +162,32 @@ export function AppProvider({ children }) {
     await loadEmployeeData(currentUser.employeeId);
   }, [currentUser, loadEmployeeData]);
 
-  const updateProfile = useCallback(async (field, value) => {
+  const updateProfile = useCallback(async (field, fileOrValue) => {
     if (field === "aadhaarFront" || field === "aadhaarBack") {
       const formData = new FormData();
-      const res = await fetch(value);
-      const blob = await res.blob();
-      formData.append("file", blob, "aadhaar.jpg");
+      let fileObj = fileOrValue;
+      if (typeof fileOrValue === "string" && fileOrValue.startsWith("data:")) {
+        const res = await fetch(fileOrValue);
+        fileObj = await res.blob();
+      }
+      formData.append("file", fileObj, "aadhaar.jpg");
       formData.append("side", field === "aadhaarFront" ? "front" : "back");
-      await api.post(`/employees/${currentUser.employeeId}/aadhaar`, formData, { headers: { "Content-Type": "multipart/form-data" } });
+      await api.post(`/employees/${currentUser.employeeId}/aadhaar`, formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
     } else if (field === "selfie") {
-      const res = await fetch(value);
-      const blob = await res.blob();
       const formData = new FormData();
-      formData.append("selfie", blob, "selfie.jpg");
-      await api.post(`/employees/${currentUser.employeeId}/selfie`, formData, { headers: { "Content-Type": "multipart/form-data" } });
+      let fileObj = fileOrValue;
+      if (typeof fileOrValue === "string" && fileOrValue.startsWith("data:")) {
+        const res = await fetch(fileOrValue);
+        fileObj = await res.blob();
+      }
+      formData.append("selfie", fileObj, "selfie.jpg");
+      await api.post(`/employees/${currentUser.employeeId}/selfie`, formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
     } else {
-      await api.patch(`/employees/${currentUser.employeeId}`, { [field]: value });
+      await api.patch(`/employees/${currentUser.employeeId}`, { [field]: fileOrValue });
     }
     await loadEmployeeData(currentUser.employeeId);
   }, [currentUser, loadEmployeeData]);

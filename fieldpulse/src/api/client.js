@@ -1,12 +1,17 @@
 import axios from "axios";
 
-// FOR MOBILE APP: Update this to your actual deployed Render backend URL
-const DEPLOYED_BACKEND_URL = "https://employee-app-8lp0.onrender.com";
+export const DEPLOYED_BACKEND_URL = "https://employee-app-8lp0.onrender.com";
 
 // Always use deployed URL — works on both web (Render) and mobile (Capacitor)
 const BASE_URL = `${DEPLOYED_BACKEND_URL}/api`;
 
 const api = axios.create({ baseURL: BASE_URL });
+
+export function getImageUrl(path) {
+  if (!path) return null;
+  if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("data:")) return path;
+  return `${DEPLOYED_BACKEND_URL}${path.startsWith("/") ? "" : "/"}${path}`;
+}
 
 // Auto-attach JWT token
 api.interceptors.request.use((config) => {

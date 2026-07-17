@@ -1,10 +1,11 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { TOKENS } from "../tokens";
 import { Card } from "../components/Card";
 import { SectionLabel } from "../components/SectionLabel";
 import { PerformanceGauge } from "../components/PerformanceGauge";
 import { useApp } from "../context/AppContext";
-import { Camera, Upload, Award, Zap, ListChecks, Calendar, Briefcase, Phone, Heart } from "lucide-react";
+import { getImageUrl } from "../api/client";
+import { Camera, Upload, Award, Zap, ListChecks, Calendar, Briefcase, Phone, Heart, Loader2 } from "lucide-react";
 
 function InfoRow({ label, value, color }) {
   return (
@@ -18,28 +19,35 @@ function InfoRow({ label, value, color }) {
   );
 }
 
-function PhotoUploader({ label, value, onChange, icon: Icon }) {
+function PhotoUploader({ label, value, onChange, loading, icon: Icon }) {
   const ref = useRef();
+  const imgUrl = getImageUrl(value);
   return (
     <div style={{ flex: 1 }}>
       <div style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, marginBottom: 6 }}>{label}</div>
       <div
-        onClick={() => ref.current.click()}
+        onClick={() => !loading && ref.current.click()}
         style={{
           width: "100%", aspectRatio: "3/2", borderRadius: 12,
           border: `2px dashed ${TOKENS.border}`, background: TOKENS.cream,
           display: "flex", flexDirection: "column", alignItems: "center",
-          justifyContent: "center", cursor: "pointer", overflow: "hidden",
-          position: "relative",
+          justifyContent: "center", cursor: loading ? "default" : "pointer", overflow: "hidden",
+          position: "relative", opacity: loading ? 0.7 : 1,
         }}
       >
-        {value
-          ? <img src={value} alt={label} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          : <>
-              <Icon size={20} color={TOKENS.muted} />
-              <span style={{ fontSize: 11, color: TOKENS.muted, marginTop: 5 }}>Tap to upload</span>
-            </>
-        }
+        {loading ? (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+            <span style={{ animation: "spin 1s linear infinite", display: "inline-block" }}>⟳</span>
+            <span style={{ fontSize: 11, color: TOKENS.navyDeep, fontWeight: 600 }}>Uploading...</span>
+          </div>
+        ) : imgUrl ? (
+          <img src={imgUrl} alt={label} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        ) : (
+          <>
+            <Icon size={20} color={TOKENS.muted} />
+            <span style={{ fontSize: 11, color: TOKENS.muted, marginTop: 5 }}>Tap to upload</span>
+          </>
+        )}
       </div>
       <input type="file" accept="image/*" ref={ref} onChange={onChange} style={{ display: "none" }} />
     </div>
@@ -48,16 +56,26 @@ function PhotoUploader({ label, value, onChange, icon: Icon }) {
 
 export function ProfileScreen({ emp }) {
   const { updateProfile } = useApp();
+  const [uploadingField, setUploadingField] = useState(null);
+  const [uploadError, setUploadError] = useState(null);
 
-  const handleFile = (field) => (e) => {
+  const handleFile = (field) => async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => updateProfile(emp.id, field, ev.target.result);
-    reader.readAsDataURL(file);
+    setUploadingField(field);
+    setUploadError(null);
+    try {
+      await updateProfile(field, file);
+    } catch (err) {
+      console.error("Profile image upload failed:", err);
+      setUploadError("Failed to upload image. Please try again.");
+    } finally {
+      setUploadingField(null);
+    }
   };
 
   const selfieRef = useRef();
+  const selfieUrl = getImageUrl(emp.selfie);
 
   return (
     <div>
@@ -69,21 +87,25 @@ export function ProfileScreen({ emp }) {
       }}>
         {/* Selfie avatar */}
         <div
-          onClick={() => selfieRef.current.click()}
+          onClick={() => uploadingField !== "selfie" && selfieRef.current.click()}
           style={{
             width: 88, height: 88, borderRadius: "50%",
             border: `3px solid ${TOKENS.gold}`, overflow: "hidden",
-            cursor: "pointer", position: "relative",
+            cursor: uploadingField === "selfie" ? "default" : "pointer", position: "relative",
             background: TOKENS.navyMid, display: "flex",
             alignItems: "center", justifyContent: "center",
+            opacity: uploadingField === "selfie" ? 0.7 : 1,
           }}
         >
-          {emp.selfie
-            ? <img src={emp.selfie} alt="selfie" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            : <span style={{ fontFamily: "Fraunces, serif", fontSize: 28, fontWeight: 700, color: TOKENS.gold }}>
-                {emp.initials}
-              </span>
-          }
+          {uploadingField === "selfie" ? (
+            <span style={{ color: TOKENS.gold, fontSize: 20, animation: "spin 1s linear infinite" }}>⟳</span>
+          ) : selfieUrl ? (
+            <img src={selfieUrl} alt="selfie" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ) : (
+            <span style={{ fontFamily: "Fraunces, serif", fontSize: 28, fontWeight: 700, color: TOKENS.gold }}>
+              {emp.initials}
+            </span>
+          )}
           <div style={{
             position: "absolute", inset: 0, background: "rgba(0,0,0,0.35)",
             display: "flex", alignItems: "center", justifyContent: "center",
@@ -96,7 +118,9 @@ export function ProfileScreen({ emp }) {
 
         <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 6 }}>
           <Camera size={13} color={TOKENS.goldLight} />
-          <span style={{ fontSize: 11, color: TOKENS.goldLight }}>Tap photo to change selfie</span>
+          <span style={{ fontSize: 11, color: TOKENS.goldLight }}>
+            {uploadingField === "selfie" ? "Uploading selfie..." : "Tap photo to change selfie"}
+          </span>
         </div>
 
         <div style={{ fontFamily: "Fraunces, serif", fontSize: 22, fontWeight: 700, color: "#fff", marginTop: 10 }}>
@@ -160,18 +184,25 @@ export function ProfileScreen({ emp }) {
 
       {/* KYC Documents */}
       <SectionLabel>KYC Documents — Aadhaar</SectionLabel>
+      {uploadError && (
+        <div style={{ color: TOKENS.danger, fontSize: 12, fontWeight: 600, marginBottom: 10, padding: "8px 12px", background: TOKENS.dangerBg, borderRadius: 8 }}>
+          ⚠️ {uploadError}
+        </div>
+      )}
       <Card>
         <div style={{ display: "flex", gap: 12 }}>
           <PhotoUploader
             label="AADHAAR FRONT"
             value={emp.aadhaar?.front}
             onChange={handleFile("aadhaarFront")}
+            loading={uploadingField === "aadhaarFront"}
             icon={Upload}
           />
           <PhotoUploader
             label="AADHAAR BACK"
             value={emp.aadhaar?.back}
             onChange={handleFile("aadhaarBack")}
+            loading={uploadingField === "aadhaarBack"}
             icon={Upload}
           />
         </div>

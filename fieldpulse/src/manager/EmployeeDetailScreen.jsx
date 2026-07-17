@@ -5,6 +5,7 @@ import { SectionLabel } from "../components/SectionLabel";
 import { StatusPill } from "../components/StatusPill";
 import { PerformanceGauge } from "../components/PerformanceGauge";
 import { useApp } from "../context/AppContext";
+import { getImageUrl } from "../api/client";
 import { ArrowLeft, MapPin, Phone, Heart, Briefcase, Calendar, Award, CheckCircle2, Clock, KeyRound, Eye, EyeOff, ExternalLink, Navigation, Compass } from "lucide-react";
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid
@@ -84,7 +85,7 @@ export function EmployeeDetailScreen({ empId, onBack }) {
             fontSize: 18, fontWeight: 700, color: TOKENS.gold, flexShrink: 0,
           }}>
             {emp.selfie
-              ? <img src={emp.selfie} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ? <img src={getImageUrl(emp.selfie)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               : emp.initials
             }
           </div>
@@ -159,7 +160,7 @@ export function EmployeeDetailScreen({ empId, onBack }) {
                     justifyContent: "center", overflow: "hidden",
                   }}>
                     {emp.aadhaar?.[side]
-                      ? <img src={emp.aadhaar[side]} alt={`Aadhaar ${side}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      ? <img src={getImageUrl(emp.aadhaar[side])} alt={`Aadhaar ${side}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                       : <span style={{ fontSize: 12, color: TOKENS.muted }}>Not uploaded</span>
                     }
                   </div>

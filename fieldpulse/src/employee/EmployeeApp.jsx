@@ -8,6 +8,7 @@ import { CheckInScreen } from "./CheckInScreen";
 import { TasksScreen } from "./TasksScreen";
 import { ReimbursementScreen } from "./ReimbursementScreen";
 import { ProfileScreen } from "./ProfileScreen";
+import { getImageUrl } from "../api/client";
 import { Home, MapPin, ListChecks, DollarSign, User, LogOut, Clock } from "lucide-react";
 
 const TABS = [
@@ -41,7 +42,7 @@ export function EmployeeApp() {
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             {emp.selfie ? (
-              <img src={emp.selfie} alt="selfie" style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover", border: `2px solid ${TOKENS.gold}` }} />
+              <img src={getImageUrl(emp.selfie)} alt="selfie" style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover", border: `2px solid ${TOKENS.gold}` }} />
             ) : (
               <div style={{ width: 32, height: 32, borderRadius: "50%", background: TOKENS.navySoft, border: `2px solid ${TOKENS.gold}`, display: "flex", alignItems: "center", justifyContent: "center", color: TOKENS.gold, fontSize: 13, fontWeight: 700 }}>
                 {emp.initials}
@@ -156,7 +157,7 @@ export function EmployeeApp() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14, paddingLeft: 4 }}>
             {emp.selfie ? (
-              <img src={emp.selfie} alt="selfie" style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover", border: `2.5px solid ${TOKENS.gold}` }} />
+              <img src={getImageUrl(emp.selfie)} alt="selfie" style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover", border: `2.5px solid ${TOKENS.gold}` }} />
             ) : (
               <div style={{ width: 40, height: 40, borderRadius: "50%", background: TOKENS.navySoft, border: `2.5px solid ${TOKENS.gold}`, display: "flex", alignItems: "center", justifyContent: "center", color: TOKENS.gold, fontSize: 14, fontWeight: 700 }}>{emp.initials}</div>
             )}
