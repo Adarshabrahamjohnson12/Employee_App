@@ -47,5 +47,9 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>FieldPulse needs your location to verify task completions and check-in statuses.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>FieldPulse needs your location to verify task completions and check-in statuses.</string>
 </dict>
 </plist>
