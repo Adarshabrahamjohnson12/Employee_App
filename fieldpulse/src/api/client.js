@@ -1,15 +1,10 @@
 import axios from "axios";
 
 // FOR MOBILE APP: Update this to your actual deployed Render backend URL
-const DEPLOYED_BACKEND_URL = "https://employee-app.onrender.com";
+const DEPLOYED_BACKEND_URL = "https://employee-app-8lp0.onrender.com";
 
-const isNativeMobile = typeof window !== "undefined" && (
-  window.location.protocol === "file:" ||
-  window.location.origin.includes("capacitor://") ||
-  (window.location.origin.startsWith("http://localhost") && !window.location.port)
-);
-
-const BASE_URL = isNativeMobile ? `${DEPLOYED_BACKEND_URL}/api` : "/api";
+// Always use deployed URL — works on both web (Render) and mobile (Capacitor)
+const BASE_URL = `${DEPLOYED_BACKEND_URL}/api`;
 
 const api = axios.create({ baseURL: BASE_URL });
 
