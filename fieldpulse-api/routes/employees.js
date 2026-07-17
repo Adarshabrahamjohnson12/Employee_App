@@ -14,6 +14,7 @@ function buildEmployee(db, emp) {
   const od = all(db, `SELECT * FROM od_records WHERE employee_id = ? ORDER BY created_at DESC`, [emp.employee_id]);
   const att = all(db, `SELECT date, status FROM attendance WHERE employee_id = ?`, [emp.employee_id]);
   const tasks = all(db, `SELECT * FROM tasks WHERE employee_id = ?`, [emp.employee_id]);
+  const checkins = all(db, `SELECT * FROM checkins WHERE employee_id = ? ORDER BY timestamp DESC LIMIT 20`, [emp.employee_id]);
 
   const doneTasks = tasks.filter(t => t.status === "done").length;
 
@@ -21,13 +22,39 @@ function buildEmployee(db, emp) {
     ...emp,
     checkedIn: !!emp.checked_in,
     onOD: !!emp.on_od,
-    checkInLocation: emp.check_in_lat ? { lat: emp.check_in_lat, lng: emp.check_in_lng, city: emp.check_in_city } : null,
+    checkInTime: emp.check_in_time,
+    checkInLocation: emp.check_in_lat ? {
+      lat: emp.check_in_lat,
+      lng: emp.check_in_lng,
+      city: emp.check_in_city,
+      time: emp.check_in_time
+    } : null,
+    checkinsHistory: checkins.map(c => ({
+      id: c.id,
+      type: c.type,
+      lat: c.lat,
+      lng: c.lng,
+      accuracy: c.accuracy,
+      city: c.city,
+      isRealGps: !!c.is_real_gps,
+      timestamp: c.timestamp,
+      date: c.date
+    })),
     tasksToday: { done: doneTasks, total: tasks.length },
     emergencyContact: ec || {},
     weeklyHours: wh.map(r => r.hours),
     punctualityTrend: pt.map(r => ({ day: r.day, min: r.minutes })),
     reimbursements: reim.map(r => ({ ...r, approvedBy: r.approved_by, rejectReason: r.reject_reason })),
-    odHistory: od.map(o => ({ ...o, arrived: !!o.arrived, arrivalLocation: o.arrival_location, arrivalTime: o.arrival_time, from: o.from_date, to: o.to_date })),
+    odHistory: od.map(o => ({
+      ...o,
+      arrived: !!o.arrived,
+      arrivalLocation: o.arrival_location,
+      arrivalLat: o.arrival_lat,
+      arrivalLng: o.arrival_lng,
+      arrivalTime: o.arrival_time,
+      from: o.from_date,
+      to: o.to_date
+    })),
     attendance: att.reduce((acc, r) => { acc[r.date] = r.status; return acc; }, {}),
     tasks: tasks,
     aadhaar: { front: emp.aadhaar_front_path ? `/uploads/${path.basename(emp.aadhaar_front_path)}` : null, back: emp.aadhaar_back_path ? `/uploads/${path.basename(emp.aadhaar_back_path)}` : null },

@@ -116,6 +116,21 @@ export function OverviewScreen({ onSelectEmp }) {
                 <span style={{ fontSize: 11, color: TOKENS.muted }}>
                   {emp.checkedIn ? emp.lastLocation : "Not checked in"} · Score {emp.score}
                 </span>
+                {(emp.checkInLocation?.lat || emp.check_in_lat) && (
+                  <a
+                    href={`https://www.google.com/maps?q=${emp.checkInLocation?.lat || emp.check_in_lat},${emp.checkInLocation?.lng || emp.check_in_lng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      fontSize: 10, fontWeight: 700, color: TOKENS.blue, textDecoration: "none",
+                      background: `${TOKENS.blue}15`, padding: "2px 6px", borderRadius: 6,
+                      display: "inline-flex", alignItems: "center", gap: 2, marginLeft: 4
+                    }}
+                  >
+                    🗺️ Map
+                  </a>
+                )}
               </div>
             </div>
             <ChevronRight size={16} color={TOKENS.muted} />

@@ -5,7 +5,7 @@ import { SectionLabel } from "../components/SectionLabel";
 import { StatusPill } from "../components/StatusPill";
 import { PerformanceGauge } from "../components/PerformanceGauge";
 import { useApp } from "../context/AppContext";
-import { ArrowLeft, MapPin, Phone, Heart, Briefcase, Calendar, Award, CheckCircle2, Clock, KeyRound, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, MapPin, Phone, Heart, Briefcase, Calendar, Award, CheckCircle2, Clock, KeyRound, Eye, EyeOff, ExternalLink, Navigation, Compass } from "lucide-react";
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid
 } from "recharts";
@@ -23,7 +23,7 @@ function InfoRow({ label, value, color }) {
   );
 }
 
-const SUB_TABS = ["Profile", "OD History", "Performance", "Reimbursements"];
+const SUB_TABS = ["Profile", "GPS Location", "OD History", "Performance", "Reimbursements"];
 
 export function EmployeeDetailScreen({ empId, onBack }) {
   const { getEmployee, tasks, resetEmployeePassword } = useApp();
@@ -241,6 +241,129 @@ export function EmployeeDetailScreen({ empId, onBack }) {
               </form>
             )}
           </Card>
+        </div>
+      )}
+
+      {/* GPS Location sub-tab */}
+      {sub === "GPS Location" && (
+        <div>
+          <SectionLabel>Live Employee Location</SectionLabel>
+          <Card style={{ padding: 18, background: TOKENS.cream }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <MapPin size={20} color={emp.checkedIn ? TOKENS.success : TOKENS.navyDeep} />
+                  <span style={{ fontFamily: "Fraunces, serif", fontSize: 17, fontWeight: 700, color: TOKENS.navyDeep }}>
+                    {emp.checkInLocation?.city || emp.lastLocation || "Unknown Location"}
+                  </span>
+                </div>
+                <div style={{ fontSize: 12, color: TOKENS.muted, marginTop: 4 }}>
+                  Status: <strong style={{ color: emp.checkedIn ? TOKENS.success : TOKENS.danger }}>
+                    {emp.checkedIn ? `Checked In (${emp.checkInTime || emp.lastSeen})` : emp.onOD ? `On OD (${emp.odCity})` : `Not Checked In (Last seen ${emp.lastSeen})`}
+                  </strong>
+                </div>
+              </div>
+              <StatusPill status={emp.onOD ? "od" : emp.checkedIn ? "present" : "absent"} />
+            </div>
+
+            {/* Coordinates display */}
+            {(emp.checkInLocation?.lat || emp.check_in_lat) ? (
+              <div style={{
+                marginTop: 14, background: "#fff", borderRadius: 12, padding: "12px 14px",
+                border: `1px solid ${TOKENS.border}`
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 6 }}>
+                  <span style={{ color: TOKENS.muted }}>Latitude</span>
+                  <span style={{ fontWeight: 700, color: TOKENS.ink, fontFamily: "monospace" }}>
+                    {(emp.checkInLocation?.lat || emp.check_in_lat).toFixed(6)}° N
+                  </span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 6 }}>
+                  <span style={{ color: TOKENS.muted }}>Longitude</span>
+                  <span style={{ fontWeight: 700, color: TOKENS.ink, fontFamily: "monospace" }}>
+                    {(emp.checkInLocation?.lng || emp.check_in_lng).toFixed(6)}° E
+                  </span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+                  <span style={{ color: TOKENS.muted }}>GPS Source</span>
+                  <span style={{ fontWeight: 700, color: TOKENS.success }}>Real-time Device GPS</span>
+                </div>
+              </div>
+            ) : (
+              <div style={{ marginTop: 12, fontSize: 12, color: TOKENS.muted }}>
+                📍 Location Region: {emp.lastLocation || "Western Region"}
+              </div>
+            )}
+
+            {/* Map Link Button */}
+            <a
+              href={
+                (emp.checkInLocation?.lat || emp.check_in_lat)
+                  ? `https://www.google.com/maps?q=${emp.checkInLocation?.lat || emp.check_in_lat},${emp.checkInLocation?.lng || emp.check_in_lng}`
+                  : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((emp.lastLocation || "Mumbai") + ", India")}`
+              }
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                marginTop: 14, width: "100%", background: TOKENS.navyDeep, color: "#fff",
+                borderRadius: 12, padding: "12px 16px", textDecoration: "none",
+                fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center",
+                justifyContent: "center", gap: 8, boxShadow: `0 4px 12px ${TOKENS.navyDeep}25`
+              }}
+            >
+              <ExternalLink size={16} /> Track on Google Maps
+            </a>
+          </Card>
+
+          {/* Location History Log */}
+          <SectionLabel>Check-In Location History</SectionLabel>
+          {(emp.checkinsHistory || []).length === 0 ? (
+            <Card style={{ textAlign: "center", color: TOKENS.muted, fontSize: 12, padding: 16 }}>
+              No check-in logs recorded today.
+            </Card>
+          ) : (
+            <Card style={{ padding: 0 }}>
+              {(emp.checkinsHistory || []).map((c, idx) => (
+                <div key={c.id || idx} style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  padding: "12px 16px", borderBottom: idx < (emp.checkinsHistory || []).length - 1 ? `1px solid ${TOKENS.border}` : "none"
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{
+                      width: 32, height: 32, borderRadius: 10,
+                      background: c.type === "in" ? TOKENS.successBg : TOKENS.dangerBg,
+                      display: "flex", alignItems: "center", justifyContent: "center"
+                    }}>
+                      <MapPin size={16} color={c.type === "in" ? TOKENS.success : TOKENS.danger} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: TOKENS.ink }}>
+                        {c.type === "in" ? "Check In" : "Check Out"} · {c.city || "Live GPS"}
+                      </div>
+                      <div style={{ fontSize: 11, color: TOKENS.muted, marginTop: 2 }}>
+                        {c.timestamp || c.date} {c.lat ? `· ${c.lat.toFixed(4)}, ${c.lng.toFixed(4)}` : ""}
+                      </div>
+                    </div>
+                  </div>
+                  {c.lat && (
+                    <a
+                      href={`https://www.google.com/maps?q=${c.lat},${c.lng}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        padding: "5px 10px", borderRadius: 8, background: TOKENS.cream,
+                        border: `1px solid ${TOKENS.border}`, color: TOKENS.navyDeep,
+                        fontSize: 11, fontWeight: 700, textDecoration: "none",
+                        display: "flex", alignItems: "center", gap: 4
+                      }}
+                    >
+                      <ExternalLink size={12} /> Map
+                    </a>
+                  )}
+                </div>
+              ))}
+            </Card>
+          )}
         </div>
       )}
 
