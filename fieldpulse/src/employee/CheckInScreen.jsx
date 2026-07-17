@@ -72,15 +72,15 @@ function OfficeCheckIn({ emp }) {
             {[
               ["Latitude", location.lat?.toFixed(5)],
               ["Longitude", location.lng?.toFixed(5)],
-              ["City / Location", location.city || "Detected"],
-              ["Accuracy", location.accuracy ? `±${location.accuracy} m` : "Approximate"],
-              ["GPS Source", location.real ? "Live GPS" : "Fallback (permission denied)"],
+              ["City / Location", location.city || "Live Location"],
+              ["Accuracy", location.accuracy ? `±${location.accuracy} m` : "High Precision GPS"],
+              ["GPS Source", (location.real !== false && location.lat) ? "Live High-Precision GPS ✓" : "Fallback (permission denied)"],
             ].map(([k, v]) => (
               <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginTop: 5 }}>
                 <span style={{ color: TOKENS.muted }}>{k}</span>
                 <span style={{
                   fontWeight: 600,
-                  color: k === "GPS Source" ? (location.real ? TOKENS.success : TOKENS.danger) : TOKENS.ink,
+                  color: k === "GPS Source" ? ((location.real !== false && location.lat) ? TOKENS.success : TOKENS.danger) : TOKENS.ink,
                 }}>{v}</span>
               </div>
             ))}

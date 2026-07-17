@@ -30,7 +30,8 @@ function buildEmployee(db, emp) {
       lat: emp.check_in_lat,
       lng: emp.check_in_lng,
       city: emp.check_in_city,
-      time: emp.check_in_time
+      time: emp.check_in_time,
+      real: true,
     } : null,
     checkinsHistory: checkins.map(c => ({
       id: c.id,
