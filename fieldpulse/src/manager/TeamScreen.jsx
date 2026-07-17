@@ -186,8 +186,30 @@ export function TeamScreen({ onSelectEmp }) {
       <SectionLabel right={<span style={{ fontSize: 11, color: TOKENS.muted }}>{filtered.length} agents</span>}>
         Team Leaderboard — Score Rank
       </SectionLabel>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {filtered.map((emp, rank) => (
+
+      {filtered.length === 0 ? (
+        <Card style={{ padding: 32, textAlign: "center", background: "#FAFBFD", margin: "10px 0" }}>
+          <div style={{ fontSize: 32, marginBottom: 8 }}>👥</div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: TOKENS.navyDeep, marginBottom: 4 }}>
+            No Employees in System
+          </div>
+          <div style={{ fontSize: 12, color: TOKENS.muted, marginBottom: 16 }}>
+            Click "+ Add Employee" above to manually add your field agents one by one.
+          </div>
+          <button
+            onClick={handleOpenAddEmpModal}
+            style={{
+              background: TOKENS.navyDeep, color: "#fff", border: "none",
+              borderRadius: 10, padding: "9px 18px", fontWeight: 700,
+              fontSize: 12.5, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6,
+            }}
+          >
+            ✦ Add Employee Now
+          </button>
+        </Card>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {filtered.map((emp, rank) => (
           <div key={emp.id} className="stagger-item" style={{ animationDelay: `${rank * 0.04}s` }}>
             <Card onClick={() => onSelectEmp(emp.id)} style={{ padding: 14 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -312,7 +334,8 @@ export function TeamScreen({ onSelectEmp }) {
             </Card>
           </div>
         ))}
-      </div>
+        </div>
+      )}
 
       {/* Assign Task Modal overlay */}
       {isAssignOpen && (
