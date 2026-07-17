@@ -44,6 +44,7 @@ export function EmployeeApp() {
               <img
                 src="/goldpe-logo.png"
                 alt="GoldPE Logo"
+                className="logo-glow"
                 style={{
                   width: 38,
                   height: 38,
@@ -174,11 +175,13 @@ export function EmployeeApp() {
         background: TOKENS.bgPage,
       }}>
         <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-          {tab === "dashboard"     && <DashboardScreen     emp={emp} goTab={setTab} />}
-          {tab === "checkin"       && <CheckInScreen       emp={emp} />}
-          {tab === "tasks"         && <TasksScreen         emp={emp} />}
-          {tab === "reimbursement" && <ReimbursementScreen emp={emp} />}
-          {tab === "profile"       && <ProfileScreen       emp={emp} />}
+          <div key={tab} className="screen-enter">
+            {tab === "dashboard"     && <DashboardScreen     emp={emp} goTab={setTab} />}
+            {tab === "checkin"       && <CheckInScreen       emp={emp} />}
+            {tab === "tasks"         && <TasksScreen         emp={emp} />}
+            {tab === "reimbursement" && <ReimbursementScreen emp={emp} />}
+            {tab === "profile"       && <ProfileScreen       emp={emp} />}
+          </div>
         </div>
       </div>
     </div>

@@ -82,3 +82,82 @@ input, textarea, select {
 .toast {
   animation: toastIn 0.3s ease forwards;
 }
+
+/* ==========================================================================
+   FIELDPULSE PREMIUM DYNAMIC MICRO-INTERACTIONS
+   ========================================================================== */
+
+/* Button Click scaling */
+button:active {
+  transform: scale(0.96) !important;
+}
+
+button {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Interactive Cards */
+.card-interactive {
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.card-interactive:hover {
+  transform: translateY(-4px) scale(1.008);
+  box-shadow: 0 16px 36px rgba(11, 19, 43, 0.08), 0 4px 12px rgba(11, 19, 43, 0.03) !important;
+  border-color: rgba(201, 162, 39, 0.4) !important;
+}
+
+/* Sidebar Navigation Tabs */
+.sidebar-tab-btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.sidebar-tab-btn:hover {
+  background: rgba(201, 162, 39, 0.1) !important;
+  color: #F8D882 !important;
+  transform: translateX(4px);
+}
+.sidebar-tab-btn::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+  transform: translateX(-100%);
+}
+.sidebar-tab-btn:hover::after {
+  transform: translateX(100%);
+  transition: transform 0.65s ease;
+}
+
+/* Sidebar Logout Button */
+.sidebar-logout:hover {
+  background: rgba(232, 137, 111, 0.12) !important;
+  border-color: rgba(232, 137, 111, 0.4) !important;
+  box-shadow: 0 4px 12px rgba(232, 137, 111, 0.15);
+  transform: translateY(-1px);
+}
+
+/* Logo Pulsating Glow */
+@keyframes logoGlow {
+  0%, 100% { box-shadow: 0 4px 12px rgba(201, 162, 39, 0.25); }
+  50% { box-shadow: 0 4px 24px rgba(201, 162, 39, 0.6); }
+}
+.logo-glow {
+  animation: logoGlow 3.5s infinite ease-in-out;
+}
+
+/* Screen Transitions */
+.screen-enter {
+  animation: fadeUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Staggered lists */
+@keyframes staggerUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.stagger-item {
+  opacity: 0;
+  animation: staggerUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+

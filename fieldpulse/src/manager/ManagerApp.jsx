@@ -22,6 +22,20 @@ export function ManagerApp() {
   const { logout } = useApp();
   const now = useClock();
 
+  const [managerPic, setManagerPic] = useState(() => localStorage.getItem("manager_profile_pic") || "");
+  const fileInputRef = React.useRef();
+
+  const handlePicChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      localStorage.setItem("manager_profile_pic", ev.target.result);
+      setManagerPic(ev.target.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
   // Helper to handle switching tabs and resetting selection
   const handleTabChange = (newTab) => {
     setSelectedEmpId(null);
@@ -49,6 +63,7 @@ export function ManagerApp() {
               <img
                 src="/goldpe-logo.png"
                 alt="GoldPE Logo"
+                className="logo-glow"
                 style={{
                   width: 38,
                   height: 38,
@@ -123,13 +138,23 @@ export function ManagerApp() {
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14, paddingLeft: 4 }}>
-            <div style={{
-              width: 40, height: 40, borderRadius: "50%", background: TOKENS.goldPale,
-              border: `2.5px solid ${TOKENS.gold}`, display: "flex", alignItems: "center",
-              justifyContent: "center", color: TOKENS.gold, fontSize: 15, fontWeight: 700,
-            }}>
-              MS
+            <div
+              onClick={() => fileInputRef.current.click()}
+              style={{
+                width: 40, height: 40, borderRadius: "50%", background: TOKENS.goldPale,
+                border: `2.5px solid ${TOKENS.gold}`, display: "flex", alignItems: "center",
+                justifyContent: "center", color: TOKENS.gold, fontSize: 15, fontWeight: 700,
+                cursor: "pointer", overflow: "hidden", position: "relative"
+              }}
+              title="Click to upload profile photo"
+            >
+              {managerPic ? (
+                <img src={managerPic} alt="Manager Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ) : (
+                "MS"
+              )}
             </div>
+            <input type="file" accept="image/*" ref={fileInputRef} onChange={handlePicChange} style={{ display: "none" }} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 Mgr. Sharma
@@ -175,19 +200,21 @@ export function ManagerApp() {
         background: TOKENS.bgPage,
       }}>
         <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-          {selectedEmpId ? (
-            <EmployeeDetailScreen
-              empId={selectedEmpId}
-              onBack={() => setSelectedEmpId(null)}
-            />
-          ) : (
-            <>
-              {tab === "overview"      && <OverviewScreen onSelectEmp={(id) => { setSelectedEmpId(id); }} />}
-              {tab === "team"          && <TeamScreen     onSelectEmp={(id) => { setSelectedEmpId(id); }} />}
-              {tab === "reimbursement" && <ReimbursementApprovals />}
-              {tab === "attendance"    && <AttendanceScreen onSelectEmp={(id) => { setSelectedEmpId(id); }} />}
-            </>
-          )}
+          <div key={selectedEmpId || tab} className="screen-enter">
+            {selectedEmpId ? (
+              <EmployeeDetailScreen
+                empId={selectedEmpId}
+                onBack={() => setSelectedEmpId(null)}
+              />
+            ) : (
+              <>
+                {tab === "overview"      && <OverviewScreen onSelectEmp={(id) => { setSelectedEmpId(id); }} />}
+                {tab === "team"          && <TeamScreen     onSelectEmp={(id) => { setSelectedEmpId(id); }} />}
+                {tab === "reimbursement" && <ReimbursementApprovals />}
+                {tab === "attendance"    && <AttendanceScreen onSelectEmp={(id) => { setSelectedEmpId(id); }} />}
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>

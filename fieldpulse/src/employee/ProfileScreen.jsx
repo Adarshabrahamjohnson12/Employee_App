@@ -41,7 +41,7 @@ function PhotoUploader({ label, value, onChange, icon: Icon }) {
             </>
         }
       </div>
-      <input type="file" accept="image/*" capture="environment" ref={ref} onChange={onChange} style={{ display: "none" }} />
+      <input type="file" accept="image/*" ref={ref} onChange={onChange} style={{ display: "none" }} />
     </div>
   );
 }
@@ -92,7 +92,7 @@ export function ProfileScreen({ emp }) {
             <Camera size={22} color="#fff" />
           </div>
         </div>
-        <input type="file" accept="image/*" capture="user" ref={selfieRef} onChange={handleFile("selfie")} style={{ display: "none" }} />
+        <input type="file" accept="image/*" ref={selfieRef} onChange={handleFile("selfie")} style={{ display: "none" }} />
 
         <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 6 }}>
           <Camera size={13} color={TOKENS.goldLight} />

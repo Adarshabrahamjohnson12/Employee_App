@@ -123,63 +123,65 @@ export function TeamScreen({ onSelectEmp }) {
       </SectionLabel>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {filtered.map((emp, rank) => (
-          <Card key={emp.id} onClick={() => onSelectEmp(emp.id)} style={{ padding: 14 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              {/* Rank */}
-              <div style={{
-                width: 24, textAlign: "center",
-                fontFamily: "Fraunces, serif", fontWeight: 700,
-                fontSize: 14, color: rank === 0 ? TOKENS.gold : TOKENS.muted,
-                flexShrink: 0,
-              }}>
-                {rank + 1}
-              </div>
-
-              {/* Avatar */}
-              <div style={{
-                width: 42, height: 42, borderRadius: "50%",
-                background: emp.checkedIn ? TOKENS.navyMid : "#CCC",
-                color: "#fff", display: "flex", alignItems: "center",
-                justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0,
-                border: `2px solid ${emp.onOD ? TOKENS.blue : emp.checkedIn ? TOKENS.success : TOKENS.border}`,
-              }}>
-                {emp.selfie
-                  ? <img src={emp.selfie} alt="" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
-                  : emp.initials
-                }
-              </div>
-
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div style={{ fontSize: 13.5, fontWeight: 700, color: TOKENS.ink }}>{emp.name}</div>
-                  <div style={{ fontFamily: "Fraunces, serif", fontSize: 16, fontWeight: 700, color: TOKENS.navyDeep }}>{emp.score}</div>
+          <div key={emp.id} className="stagger-item" style={{ animationDelay: `${rank * 0.04}s` }}>
+            <Card onClick={() => onSelectEmp(emp.id)} style={{ padding: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                {/* Rank */}
+                <div style={{
+                  width: 24, textAlign: "center",
+                  fontFamily: "Fraunces, serif", fontWeight: 700,
+                  fontSize: 14, color: rank === 0 ? TOKENS.gold : TOKENS.muted,
+                  flexShrink: 0,
+                }}>
+                  {rank + 1}
                 </div>
-                <div style={{ fontSize: 11.5, color: TOKENS.muted, marginTop: 2 }}>{emp.role}</div>
 
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                    <MapPin size={11} color={TOKENS.muted} />
-                    <span style={{ fontSize: 11, color: TOKENS.muted }}>{emp.lastLocation}</span>
+                {/* Avatar */}
+                <div style={{
+                  width: 42, height: 42, borderRadius: "50%",
+                  background: emp.checkedIn ? TOKENS.navyMid : "#CCC",
+                  color: "#fff", display: "flex", alignItems: "center",
+                  justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0,
+                  border: `2px solid ${emp.onOD ? TOKENS.blue : emp.checkedIn ? TOKENS.success : TOKENS.border}`,
+                }}>
+                  {emp.selfie
+                    ? <img src={emp.selfie} alt="" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
+                    : emp.initials
+                  }
+                </div>
+
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 700, color: TOKENS.ink }}>{emp.name}</div>
+                    <div style={{ fontFamily: "Fraunces, serif", fontSize: 16, fontWeight: 700, color: TOKENS.navyDeep }}>{emp.score}</div>
                   </div>
-                  <StatusPill status={emp.onOD ? "od" : emp.checkedIn ? "present" : "absent"} />
+                  <div style={{ fontSize: 11.5, color: TOKENS.muted, marginTop: 2 }}>{emp.role}</div>
+
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      <MapPin size={11} color={TOKENS.muted} />
+                      <span style={{ fontSize: 11, color: TOKENS.muted }}>{emp.lastLocation}</span>
+                    </div>
+                    <StatusPill status={emp.onOD ? "od" : emp.checkedIn ? "present" : "absent"} />
+                  </div>
+
+                  <div style={{ display: "flex", gap: 12, marginTop: 6 }}>
+                    <span style={{ fontSize: 11, color: TOKENS.muted }}>
+                      Tasks: <strong style={{ color: TOKENS.ink }}>{emp.tasksToday.done}/{emp.tasksToday.total}</strong>
+                    </span>
+                    <span style={{ fontSize: 11, color: TOKENS.muted }}>
+                      Streak: <strong style={{ color: TOKENS.ink }}>{emp.streak}d</strong>
+                    </span>
+                    <span style={{ fontSize: 11, color: TOKENS.muted }}>
+                      {emp.lastSeen}
+                    </span>
+                  </div>
                 </div>
 
-                <div style={{ display: "flex", gap: 12, marginTop: 6 }}>
-                  <span style={{ fontSize: 11, color: TOKENS.muted }}>
-                    Tasks: <strong style={{ color: TOKENS.ink }}>{emp.tasksToday.done}/{emp.tasksToday.total}</strong>
-                  </span>
-                  <span style={{ fontSize: 11, color: TOKENS.muted }}>
-                    Streak: <strong style={{ color: TOKENS.ink }}>{emp.streak}d</strong>
-                  </span>
-                  <span style={{ fontSize: 11, color: TOKENS.muted }}>
-                    {emp.lastSeen}
-                  </span>
-                </div>
+                <ChevronRight size={16} color={TOKENS.muted} style={{ flexShrink: 0 }} />
               </div>
-
-              <ChevronRight size={16} color={TOKENS.muted} style={{ flexShrink: 0 }} />
-            </div>
-          </Card>
+            </Card>
+          </div>
         ))}
       </div>
 
