@@ -109,21 +109,18 @@ export function AppProvider({ children }) {
 
   const doCheckOut = useCallback(async () => {
     await api.post("/checkin/out");
-    setEmployee(prev => prev ? { ...prev, checkedIn: false } : prev);
-  }, []);
+    await loadEmployeeData(currentUser.employeeId);
+  }, [currentUser, loadEmployeeData]);
 
   const declareOD = useCallback(async (record) => {
-    const { data } = await api.post("/od", record);
-    setEmployee(prev => prev ? { ...prev, onOD: true, odCity: record.city, odHistory: [{ ...data.data, arrived: false }, ...(prev.odHistory || [])] } : prev);
-  }, []);
+    await api.post("/od", record);
+    await loadEmployeeData(currentUser.employeeId);
+  }, [currentUser, loadEmployeeData]);
 
   const markODArrived = useCallback(async (odId, location) => {
-    const { data } = await api.patch(`/od/${odId}/arrive`, { lat: location.lat, lng: location.lng, city: location.city });
-    setEmployee(prev => {
-      if (!prev) return prev;
-      return { ...prev, odHistory: prev.odHistory.map(od => od.id === odId ? { ...od, arrived: true, arrivalLocation: data.arrivalLocation, arrivalTime: data.arrivalTime } : od) };
-    });
-  }, []);
+    await api.patch(`/od/${odId}/arrive`, { lat: location.lat, lng: location.lng, city: location.city });
+    await loadEmployeeData(currentUser.employeeId);
+  }, [currentUser, loadEmployeeData]);
 
   const completeTask = useCallback(async (taskId, location, report) => {
     await api.patch(`/tasks/${taskId}/complete`, {
@@ -133,43 +130,31 @@ export function AppProvider({ children }) {
       team: report?.team,
       remarks: report?.remarks
     });
-    const time = fmtTime(new Date());
-    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: "done", time, completion_status: report?.status, completion_team: report?.team, completion_remarks: report?.remarks } : t));
-    setEmployee(prev => {
-      if (!prev) return prev;
-      const done = (tasks.filter(t => t.status === "done").length) + 1;
-      return { ...prev, tasksToday: { done, total: tasks.length } };
-    });
-  }, [tasks]);
+    await loadEmployeeData(currentUser.employeeId);
+  }, [currentUser, loadEmployeeData]);
 
   const addReimbursement = useCallback(async (request) => {
     const { receipt, ...body } = request;
     const { data } = await api.post("/reimbursements", body);
-    let receiptPath = null;
     if (receipt) {
       try {
         const res = await fetch(receipt);
         const blob = await res.blob();
         const formData = new FormData();
         formData.append("receipt", blob, "receipt.jpg");
-        const uploadRes = await api.post(`/reimbursements/${data.data.id}/receipt`, formData, {
+        await api.post(`/reimbursements/${data.data.id}/receipt`, formData, {
           headers: { "Content-Type": "multipart/form-data" }
         });
-        receiptPath = uploadRes.data.url;
       } catch (err) {
         console.error("Receipt upload failed:", err);
       }
     }
-    setEmployee(prev => prev ? {
-      ...prev,
-      reimbursements: [{ ...data.data, receipt_path: receiptPath, approvedBy: null, rejectReason: null }, ...(prev.reimbursements || [])]
-    } : prev);
-  }, []);
+    await loadEmployeeData(currentUser.employeeId);
+  }, [currentUser, loadEmployeeData]);
 
   const updateProfile = useCallback(async (field, value) => {
     if (field === "aadhaarFront" || field === "aadhaarBack") {
       const formData = new FormData();
-      // value is base64 — convert to blob
       const res = await fetch(value);
       const blob = await res.blob();
       formData.append("file", blob, "aadhaar.jpg");
@@ -195,11 +180,8 @@ export function AppProvider({ children }) {
 
   const updateReimbursement = useCallback(async (empId, reimId, status, rejectReason) => {
     await api.patch(`/reimbursements/${reimId}`, { status, rejectReason });
-    setTeam(prev => prev.map(emp => {
-      if (emp.employee_id !== empId && emp.employeeId !== empId) return emp;
-      return { ...emp, reimbursements: (emp.reimbursements || []).map(r => r.id === reimId ? { ...r, status, approvedBy: "Mgr. Sharma", rejectReason: rejectReason || null } : r) };
-    }));
-  }, []);
+    await loadTeamData();
+  }, [loadTeamData]);
 
   const getEmployee = useCallback((id) => team.find(e => e.id === id || e.employee_id === id), [team]);
 
