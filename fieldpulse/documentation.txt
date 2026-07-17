@@ -19,7 +19,7 @@ A. Production-Ready Desktop UI Layout
    - Profile footer showing current user's profile card and a sign-out button.
    - Smooth desktop workspace views replacing the narrow mobile phone frames.
 
-B. Interactive Employee-Manager Task System
+B. Interactive Employee-Manager Task System & Real-Time Sync
    - **Manager Task Assignment**: Managers can assign new tasks directly from
      the "Team" dashboard to any regional agent. Input fields include Task Title,
      Category (Calibration, Site Visit, MoU Pickup, Client Meeting), Target 
@@ -33,6 +33,10 @@ B. Interactive Employee-Manager Task System
    - **Syncing & Reporting**: The manager can click on any employee to see a 
      full historic list of assigned tasks, complete with their status, team, 
      remarks, and geo-verified coordinates on the employee's detail view.
+   - **Real-Time Polling Sync**: Automatically checks the server every 4 seconds 
+     for fresh state data (silently without showing loaders). This ensures 
+     check-ins, tasks, and reimbursement actions sync instantly between employee 
+     and manager.
 
 C. Employee Check-In & OD (On Duty) Portals
    - Tap-to-Verify shift log capturing real-time device latitude, longitude,
