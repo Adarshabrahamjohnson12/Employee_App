@@ -63,13 +63,13 @@ export function ManagerReportsCalendarScreen() {
 
   useEffect(() => {
     loadCalendarData();
-  }, [currentYear, currentMonth]);
+  }, [currentYear, currentMonth, team]);
 
   useEffect(() => {
     if (selectedDate) {
       loadReportsForDate(selectedDate);
     }
-  }, [selectedDate]);
+  }, [selectedDate, team]);
 
   // Calendar Month Navigation
   const prevMonth = () => {

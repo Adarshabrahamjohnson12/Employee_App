@@ -7,7 +7,7 @@ import { useApp } from "../context/AppContext";
 import { getImageUrl } from "../api/client";
 import { MapPin, ChevronRight, Search } from "lucide-react";
 
-const FILTERS = ["All", "Checked In", "On OD", "Daily Report", "Absent"];
+const FILTERS = ["All", "Checked In", "On OD", "Absent"];
 
 export function TeamScreen({ onSelectEmp }) {
   const { team, assignTask, addEmployee } = useApp();
@@ -113,10 +113,9 @@ export function TeamScreen({ onSelectEmp }) {
       emp.lastLocation.toLowerCase().includes(search.toLowerCase());
     if (!matchSearch) return false;
     if (filter === "All") return true;
-    if (filter === "Checked In")   return emp.checkedIn && !emp.onOD;
-    if (filter === "On OD")        return emp.onOD;
-    if (filter === "Daily Report") return emp.hasSubmittedReportToday || (emp.reports && emp.reports.length > 0);
-    if (filter === "Absent")       return !emp.checkedIn && !emp.onOD;
+    if (filter === "Checked In") return emp.checkedIn && !emp.onOD;
+    if (filter === "On OD")      return emp.onOD;
+    if (filter === "Absent")     return !emp.checkedIn && !emp.onOD;
     return true;
   }).sort((a, b) => b.score - a.score);
 
@@ -241,7 +240,7 @@ export function TeamScreen({ onSelectEmp }) {
                         </a>
                       )}
                     </div>
-                    <StatusPill status={emp.onOD ? "od" : (filter === "Daily Report" || emp.hasSubmittedReportToday) ? "report" : emp.checkedIn ? "present" : "absent"} />
+                    <StatusPill status={emp.onOD ? "od" : emp.checkedIn ? "present" : "absent"} />
                   </div>
 
                   <div style={{ display: "flex", gap: 12, marginTop: 6 }}>
