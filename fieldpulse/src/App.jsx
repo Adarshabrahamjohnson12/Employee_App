@@ -18,11 +18,21 @@ function PhoneFrame({ children }) {
 
 // ── Login screen ───────────────────────────────────────────────────────────
 function LoginScreen() {
-  const { login, loading, error } = useApp();
+  const { login, setupPassword, loading, error } = useApp();
+  const [mode, setMode] = useState("login"); // 'login' or 'setup'
+  
+  // Login states
   const [empId, setEmpId] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [localErr, setLocalErr] = useState("");
+
+  // Setup states
+  const [setupId, setSetupId] = useState("");
+  const [setupPw, setSetupPw] = useState("");
+  const [setupConfirm, setSetupConfirm] = useState("");
+  const [setupErr, setSetupErr] = useState("");
+  const [setupSuccess, setSetupSuccess] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,6 +40,33 @@ function LoginScreen() {
     if (!empId.trim() || !password) { setLocalErr("Please enter both Employee ID and password."); return; }
     try { await login(empId.trim().toUpperCase(), password); }
     catch (err) { setLocalErr(err.message); }
+  };
+
+  const handleSetupSubmit = async (e) => {
+    e.preventDefault();
+    setSetupErr("");
+    setSetupSuccess("");
+    if (!setupId.trim() || !setupPw || !setupConfirm) {
+      setSetupErr("All fields are required.");
+      return;
+    }
+    if (setupPw !== setupConfirm) {
+      setSetupErr("Passwords do not match.");
+      return;
+    }
+    try {
+      await setupPassword(setupId.trim().toUpperCase(), setupPw);
+      setSetupSuccess("Password setup successful! You can now log in.");
+      // Auto-fill login fields
+      setEmpId(setupId.toUpperCase());
+      setPassword(setupPw);
+      setMode("login");
+      setSetupId("");
+      setSetupPw("");
+      setSetupConfirm("");
+    } catch (err) {
+      setSetupErr(err.message);
+    }
   };
 
   // Quick-fill demo credentials
@@ -55,6 +92,7 @@ function LoginScreen() {
           <img
             src="/goldpe-logo.png"
             alt="GoldPE Logo"
+            className="logo-glow"
             style={{
               width: 80,
               height: 80,
@@ -96,60 +134,140 @@ function LoginScreen() {
         display: "flex", alignItems: "center", justifyContent: "center",
         padding: "48px 40px", background: TOKENS.cream
       }}>
-        <div style={{ width: "100%", maxWidth: 400 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 6 }}>Welcome back</div>
-          <h2 style={{ fontFamily: "Fraunces, serif", fontSize: 28, fontWeight: 700, color: TOKENS.navyDeep, margin: "0 0 24px" }}>Sign In to Portal</h2>
+        <div style={{ width: "100%", maxWidth: 400 }} className="screen-enter" key={mode}>
+          {mode === "login" ? (
+            <>
+              <div style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 6 }}>Welcome back</div>
+              <h2 style={{ fontFamily: "Fraunces, serif", fontSize: 28, fontWeight: 700, color: TOKENS.navyDeep, margin: "0 0 24px" }}>Sign In to Portal</h2>
 
-          <form onSubmit={handleSubmit}>
-            {/* Employee ID */}
-            <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 6 }}>EMPLOYEE ID / USERNAME</label>
-            <input
-              value={empId}
-              onChange={e => setEmpId(e.target.value)}
-              placeholder="e.g. FP-WR-001 or MANAGER"
-              style={{ width: "100%", padding: "14px 16px", borderRadius: 12, border: `1.5px solid ${TOKENS.border}`, fontSize: 14, color: TOKENS.ink, outline: "none", background: "#fff", marginBottom: 16 }}
-            />
+              {setupSuccess && (
+                <div style={{ background: `${TOKENS.success}18`, borderRadius: 12, padding: "12px 14px", marginBottom: 16, fontSize: 13, color: TOKENS.success, fontWeight: 600 }}>
+                  ✓ {setupSuccess}
+                </div>
+              )}
 
-            {/* Password */}
-            <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 6 }}>PASSWORD</label>
-            <div style={{ position: "relative", marginBottom: 8 }}>
-              <input
-                type={showPw ? "text" : "password"}
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                style={{ width: "100%", padding: "14px 44px 14px 16px", borderRadius: 12, border: `1.5px solid ${TOKENS.border}`, fontSize: 14, color: TOKENS.ink, outline: "none", background: "#fff" }}
-              />
-              <button type="button" onClick={() => setShowPw(p => !p)} style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", border: "none", background: "none", cursor: "pointer" }}>
-                {showPw ? <EyeOff size={18} color={TOKENS.muted} /> : <Eye size={18} color={TOKENS.muted} />}
-              </button>
-            </div>
+              <form onSubmit={handleSubmit}>
+                {/* Employee ID */}
+                <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 6 }}>EMPLOYEE ID / USERNAME</label>
+                <input
+                  value={empId}
+                  onChange={e => setEmpId(e.target.value)}
+                  placeholder="e.g. FP-WR-001 or MANAGER"
+                  style={{ width: "100%", padding: "14px 16px", borderRadius: 12, border: `1.5px solid ${TOKENS.border}`, fontSize: 14, color: TOKENS.ink, outline: "none", background: "#fff", marginBottom: 16 }}
+                />
 
-            {/* Error */}
-            {(localErr || error) && (
-              <div style={{ display: "flex", alignItems: "center", gap: 8, background: TOKENS.dangerBg, border: `1px solid ${TOKENS.danger}30`, borderRadius: 12, padding: "12px 14px", marginBottom: 16 }}>
-                <AlertCircle size={17} color={TOKENS.danger} />
-                <span style={{ fontSize: 13, color: TOKENS.danger, fontWeight: 600 }}>{localErr || error}</span>
-              </div>
-            )}
+                {/* Password */}
+                <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 6 }}>PASSWORD</label>
+                <div style={{ position: "relative", marginBottom: 8 }}>
+                  <input
+                    type={showPw ? "text" : "password"}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    style={{ width: "100%", padding: "14px 44px 14px 16px", borderRadius: 12, border: `1.5px solid ${TOKENS.border}`, fontSize: 14, color: TOKENS.ink, outline: "none", background: "#fff" }}
+                  />
+                  <button type="button" onClick={() => setShowPw(p => !p)} style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", border: "none", background: "none", cursor: "pointer" }}>
+                    {showPw ? <EyeOff size={18} color={TOKENS.muted} /> : <Eye size={18} color={TOKENS.muted} />}
+                  </button>
+                </div>
 
-            <button type="submit" disabled={loading} style={{ width: "100%", background: loading ? TOKENS.muted : TOKENS.navyDeep, color: "#fff", border: "none", borderRadius: 13, padding: "14px 18px", fontWeight: 700, fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: loading ? "default" : "pointer", marginTop: 8, transition: "background 0.2s" }}>
-              {loading ? <><span style={{ animation: "spin 1s linear infinite", display: "inline-block" }}>⟳</span> Authenticating…</> : <><LogIn size={18} /> Sign In</>}
-            </button>
-          </form>
+                {/* Error */}
+                {(localErr || error) && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, background: TOKENS.dangerBg, border: `1px solid ${TOKENS.danger}30`, borderRadius: 12, padding: "12px 14px", marginBottom: 16 }}>
+                    <AlertCircle size={17} color={TOKENS.danger} />
+                    <span style={{ fontSize: 13, color: TOKENS.danger, fontWeight: 600 }}>{localErr || error}</span>
+                  </div>
+                )}
 
-          {/* Quick demo selection */}
-          <div style={{ marginTop: 28 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, marginBottom: 12, textTransform: "uppercase" }}>Quick demo profiles</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {DEMOS.map(d => (
-                <button key={d.id} type="button" onClick={() => { setEmpId(d.id); setPassword(d.pw); setLocalErr(""); }} style={{ background: "#fff", border: `1.5px solid ${TOKENS.border}`, borderRadius: 12, padding: "11px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", transition: "all 0.15s ease", outline: "none" }} className="demo-login-btn">
-                  <span style={{ fontSize: 13, fontWeight: 600, color: TOKENS.ink }}>{d.label}</span>
-                  <span style={{ fontSize: 11, color: TOKENS.muted, fontFamily: "monospace" }}>{d.id}</span>
+                <button type="submit" disabled={loading} style={{ width: "100%", background: loading ? TOKENS.muted : TOKENS.navyDeep, color: "#fff", border: "none", borderRadius: 13, padding: "14px 18px", fontWeight: 700, fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: loading ? "default" : "pointer", marginTop: 8, transition: "background 0.2s" }}>
+                  {loading ? <><span style={{ animation: "spin 1s linear infinite", display: "inline-block" }}>⟳</span> Authenticating…</> : <><LogIn size={18} /> Sign In</>}
                 </button>
-              ))}
-            </div>
-          </div>
+              </form>
+
+              <div style={{ marginTop: 20, textAlign: "center" }}>
+                <span style={{ fontSize: 13, color: TOKENS.muted }}>First time login? </span>
+                <button
+                  type="button"
+                  onClick={() => { setMode("setup"); setLocalErr(""); setSetupSuccess(""); }}
+                  style={{ border: "none", background: "none", color: TOKENS.gold, fontWeight: 700, fontSize: 13, cursor: "pointer", padding: 0 }}
+                >
+                  Setup your password
+                </button>
+              </div>
+
+              {/* Quick demo selection */}
+              <div style={{ marginTop: 28 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, marginBottom: 12, textTransform: "uppercase" }}>Quick demo profiles</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {DEMOS.map(d => (
+                    <button key={d.id} type="button" onClick={() => { setEmpId(d.id); setPassword(d.pw); setLocalErr(""); }} style={{ background: "#fff", border: `1.5px solid ${TOKENS.border}`, borderRadius: 12, padding: "11px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", transition: "all 0.15s ease", outline: "none" }} className="demo-login-btn">
+                      <span style={{ fontSize: 13, fontWeight: 600, color: TOKENS.ink }}>{d.label}</span>
+                      <span style={{ fontSize: 11, color: TOKENS.muted, fontFamily: "monospace" }}>{d.id}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 6 }}>Password Setup</div>
+              <h2 style={{ fontFamily: "Fraunces, serif", fontSize: 28, fontWeight: 700, color: TOKENS.navyDeep, margin: "0 0 24px" }}>First Time Setup</h2>
+
+              <form onSubmit={handleSetupSubmit}>
+                {/* Employee ID */}
+                <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 6 }}>EMPLOYEE ID / USERNAME</label>
+                <input
+                  value={setupId}
+                  onChange={e => setSetupId(e.target.value)}
+                  placeholder="e.g. FP-WR-005"
+                  style={{ width: "100%", padding: "14px 16px", borderRadius: 12, border: `1.5px solid ${TOKENS.border}`, fontSize: 14, color: TOKENS.ink, outline: "none", background: "#fff", marginBottom: 16 }}
+                />
+
+                {/* Password */}
+                <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 6 }}>NEW PASSWORD</label>
+                <input
+                  type="password"
+                  value={setupPw}
+                  onChange={e => setSetupPw(e.target.value)}
+                  placeholder="Enter secure password"
+                  style={{ width: "100%", padding: "14px 16px", borderRadius: 12, border: `1.5px solid ${TOKENS.border}`, fontSize: 14, color: TOKENS.ink, outline: "none", background: "#fff", marginBottom: 16 }}
+                />
+
+                {/* Confirm Password */}
+                <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 6 }}>CONFIRM PASSWORD</label>
+                <input
+                  type="password"
+                  value={setupConfirm}
+                  onChange={e => setSetupConfirm(e.target.value)}
+                  placeholder="Re-enter password"
+                  style={{ width: "100%", padding: "14px 16px", borderRadius: 12, border: `1.5px solid ${TOKENS.border}`, fontSize: 14, color: TOKENS.ink, outline: "none", background: "#fff", marginBottom: 16 }}
+                />
+
+                {/* Error */}
+                {setupErr && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, background: TOKENS.dangerBg, border: `1px solid ${TOKENS.danger}30`, borderRadius: 12, padding: "12px 14px", marginBottom: 16 }}>
+                    <AlertCircle size={17} color={TOKENS.danger} />
+                    <span style={{ fontSize: 13, color: TOKENS.danger, fontWeight: 600 }}>{setupErr}</span>
+                  </div>
+                )}
+
+                <button type="submit" disabled={loading} style={{ width: "100%", background: loading ? TOKENS.muted : TOKENS.navyDeep, color: "#fff", border: "none", borderRadius: 13, padding: "14px 18px", fontWeight: 700, fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: loading ? "default" : "pointer", marginTop: 8, transition: "background 0.2s" }}>
+                  {loading ? <><span style={{ animation: "spin 1s linear infinite", display: "inline-block" }}>⟳</span> Setting up…</> : <><LogIn size={18} /> Setup Password</>}
+                </button>
+              </form>
+
+              <div style={{ marginTop: 20, textAlign: "center" }}>
+                <span style={{ fontSize: 13, color: TOKENS.muted }}>Already have a password? </span>
+                <button
+                  type="button"
+                  onClick={() => { setMode("login"); setSetupErr(""); }}
+                  style={{ border: "none", background: "none", color: TOKENS.gold, fontWeight: 700, fontSize: 13, cursor: "pointer", padding: 0 }}
+                >
+                  Sign in
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

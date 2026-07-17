@@ -32,6 +32,16 @@ export function AppProvider({ children }) {
     } finally { setLoading(false); }
   }, []);
 
+  const setupPassword = useCallback(async (employeeId, password) => {
+    setLoading(true); setError(null);
+    try {
+      await api.post("/auth/setup-password", { employeeId, password });
+    } catch (err) {
+      const msg = err.response?.data?.error || "Setup failed";
+      setError(msg); throw new Error(msg);
+    } finally { setLoading(false); }
+  }, []);
+
   const logout = useCallback(() => {
     localStorage.removeItem("fp_token");
     localStorage.removeItem("fp_user");
@@ -178,25 +188,37 @@ export function AppProvider({ children }) {
     await refreshTeam();
   }, [refreshTeam]);
 
+  const addEmployee = useCallback(async (empData) => {
+    await api.post("/employees", empData);
+    await refreshTeam();
+  }, [refreshTeam]);
+
   const updateReimbursement = useCallback(async (empId, reimId, status, rejectReason) => {
     await api.patch(`/reimbursements/${reimId}`, { status, rejectReason });
     await loadTeamData();
   }, [loadTeamData]);
 
+  const resetEmployeePassword = useCallback(async (empId, password) => {
+    await api.patch(`/employees/${empId}/reset-password`, { password });
+  }, []);
+
+
   const getEmployee = useCallback((id) => team.find(e => e.id === id || e.employee_id === id), [team]);
 
   const value = {
     currentUser, employee, team, tasks, loading, error,
-    login, logout,
+    login, logout, setupPassword,
     getEmployee,
     doCheckIn, doCheckOut,
     declareOD, markODArrived,
     completeTask,
-    assignTask,
+    assignTask, addEmployee,
     addReimbursement, updateReimbursement,
     updateProfile,
     refreshEmployee, refreshTeam,
+    resetEmployeePassword,
   };
+
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

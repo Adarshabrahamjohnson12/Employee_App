@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const auth = require("../middleware/authMiddleware");
+const bcrypt = require("bcryptjs");
 const upload = require("../middleware/upload");
 const { getDb, run, get, all } = require("../database/db");
 const path = require("path");
@@ -42,6 +43,42 @@ router.get("/", auth, async (req, res) => {
     const emps = all(db, `SELECT * FROM employees ORDER BY score DESC`);
     res.json({ data: emps.map(e => buildEmployee(db, e)) });
   } catch (err) { console.error(err); res.status(500).json({ error: "Server error" }); }
+});
+
+// POST /api/employees — create new employee profile (manager only)
+router.post("/", auth, async (req, res) => {
+  try {
+    if (req.user.role !== "manager") return res.status(403).json({ error: "Manager only" });
+    const { employeeId, name, role, clientName, teamName, joiningDate, password } = req.body;
+    if (!employeeId || !name || !role || !password) {
+      return res.status(400).json({ error: "Employee ID, Name, Role, and Password are required" });
+    }
+
+    const db = await getDb();
+    const existing = get(db, `SELECT id FROM employees WHERE employee_id = ?`, [employeeId.toUpperCase()]);
+    if (existing) {
+      return res.status(400).json({ error: "Employee ID already exists" });
+    }
+
+    const initials = name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+
+    run(db, `INSERT INTO employees (employee_id, name, role, client_name, team_name, joining_date, initials, score, streak) VALUES (?,?,?,?,?,?,?,0,0)`,
+      [employeeId.toUpperCase(), name, role, clientName || "GoldPE Client", teamName || "Western Region", joiningDate || new Date().toISOString().slice(0, 10), initials]);
+
+    // Insert password hash
+    const hash = bcrypt.hashSync(password, 10);
+    run(db, `INSERT OR REPLACE INTO employee_passwords (employee_id, password_hash) VALUES (?,?)`, [employeeId.toUpperCase(), hash]);
+
+    for (let i = 0; i < 7; i++) {
+      run(db, `INSERT OR IGNORE INTO weekly_hours (employee_id, day_index, hours) VALUES (?,?,0)`, [employeeId.toUpperCase(), i]);
+    }
+
+    const newEmp = get(db, `SELECT * FROM employees WHERE employee_id = ?`, [employeeId.toUpperCase()]);
+    res.json({ data: buildEmployee(db, newEmp) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 // GET /api/employees/:id — single employee
@@ -101,4 +138,20 @@ router.post("/:id/aadhaar", auth, upload.single("file"), async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ error: "Server error" }); }
 });
 
+// PATCH /api/employees/:id/reset-password — manager sets/resets password
+router.patch("/:id/reset-password", auth, async (req, res) => {
+  try {
+    if (req.user.role !== "manager") return res.status(403).json({ error: "Manager only" });
+    const { password } = req.body;
+    if (!password || password.length < 4) return res.status(400).json({ error: "Password must be at least 4 characters" });
+    const db = await getDb();
+    const emp = get(db, `SELECT employee_id FROM employees WHERE id = ? OR employee_id = ?`, [req.params.id, req.params.id]);
+    if (!emp) return res.status(404).json({ error: "Employee not found" });
+    const hash = bcrypt.hashSync(password, 10);
+    run(db, `INSERT OR REPLACE INTO employee_passwords (employee_id, password_hash) VALUES (?,?)`, [emp.employee_id, hash]);
+    res.json({ message: "Password updated successfully" });
+  } catch (err) { console.error(err); res.status(500).json({ error: "Server error" }); }
+});
+
 module.exports = router;
+

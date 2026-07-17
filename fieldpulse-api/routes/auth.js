@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { getDb, get } = require("../database/db");
+const { getDb, get, run } = require("../database/db");
 
 // POST /api/auth/login
 router.post("/login", async (req, res) => {
@@ -32,6 +32,35 @@ router.post("/login", async (req, res) => {
 
     const token = jwt.sign({ id: emp.id, employeeId: emp.employee_id, name: emp.name, role: "employee" }, process.env.JWT_SECRET, { expiresIn: "24h" });
     res.json({ token, user: { id: emp.id, employeeId: emp.employee_id, name: emp.name, role: "employee" } });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// POST /api/auth/setup-password
+router.post("/setup-password", async (req, res) => {
+  try {
+    const { employeeId, password } = req.body;
+    if (!employeeId || !password) {
+      return res.status(400).json({ error: "Employee ID and password required" });
+    }
+
+    const db = await getDb();
+    const emp = get(db, `SELECT employee_id FROM employees WHERE employee_id = ?`, [employeeId.toUpperCase()]);
+    if (!emp) {
+      return res.status(404).json({ error: "Employee ID not found. Contact Manager to create your profile." });
+    }
+
+    const existingPw = get(db, `SELECT employee_id FROM employee_passwords WHERE employee_id = ?`, [emp.employee_id]);
+    if (existingPw) {
+      return res.status(400).json({ error: "Password already set for this employee." });
+    }
+
+    const hash = bcrypt.hashSync(password, 10);
+    run(db, `INSERT INTO employee_passwords (employee_id, password_hash) VALUES (?,?)`, [emp.employee_id, hash]);
+
+    res.json({ message: "Password setup successful! You can now log in." });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });

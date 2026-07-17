@@ -9,7 +9,7 @@ import { MapPin, ChevronRight, Search } from "lucide-react";
 const FILTERS = ["All", "Checked In", "On OD", "Absent"];
 
 export function TeamScreen({ onSelectEmp }) {
-  const { team, assignTask } = useApp();
+  const { team, assignTask, addEmployee } = useApp();
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
   
@@ -22,6 +22,56 @@ export function TeamScreen({ onSelectEmp }) {
   const [clientRef, setClientRef] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
+  // Add Employee modal states
+  const [isAddEmpOpen, setIsAddEmpOpen] = useState(false);
+  const [newEmpId, setNewEmpId] = useState("");
+  const [newName, setNewName] = useState("");
+  const [newRole, setNewRole] = useState("Field Agent");
+  const [newClient, setNewClient] = useState("GoldPE Client");
+  const [newTeam, setNewTeam] = useState("Western Region");
+  const [newJoiningDate, setNewJoiningDate] = useState(new Date().toISOString().slice(0, 10));
+  const [newPassword, setNewPassword] = useState("");
+  const [loadingAdd, setLoadingAdd] = useState(false);
+  const [errorAdd, setErrorAdd] = useState("");
+
+  const handleOpenAddEmpModal = () => {
+    setIsAddEmpOpen(true);
+    setNewEmpId(`FP-WR-00${team.length + 1}`);
+    setNewName("");
+    setNewRole("Field Agent");
+    setNewClient("GoldPE Client");
+    setNewTeam("Western Region");
+    setNewJoiningDate(new Date().toISOString().slice(0, 10));
+    setNewPassword("");
+    setErrorAdd("");
+  };
+
+  const handleAddEmployee = async (e) => {
+    e.preventDefault();
+    if (!newEmpId.trim() || !newName.trim() || !newRole.trim() || !newPassword.trim()) {
+      setErrorAdd("Employee ID, Name, Role, and Password are required.");
+      return;
+    }
+    setErrorAdd("");
+    setLoadingAdd(true);
+    try {
+      await addEmployee({
+        employeeId: newEmpId.trim(),
+        name: newName.trim(),
+        role: newRole.trim(),
+        clientName: newClient.trim(),
+        teamName: newTeam.trim(),
+        joiningDate: newJoiningDate,
+        password: newPassword.trim(),
+      });
+      setIsAddEmpOpen(false);
+    } catch (err) {
+      setErrorAdd(err.response?.data?.error || "Failed to add employee.");
+    } finally {
+      setLoadingAdd(false);
+    }
+  };
 
   const handleOpenAssignModal = () => {
     setIsAssignOpen(true);
@@ -70,22 +120,34 @@ export function TeamScreen({ onSelectEmp }) {
 
   return (
     <div>
-      {/* Header with Assign Task */}
+      {/* Header with Actions */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
         <h2 style={{ fontFamily: "Fraunces, serif", fontSize: 24, fontWeight: 700, color: TOKENS.navyDeep, margin: 0 }}>
           Regional Employees
         </h2>
-        <button
-          onClick={handleOpenAssignModal}
-          style={{
-            background: TOKENS.navyDeep, color: "#fff", border: "none",
-            borderRadius: 12, padding: "10px 18px", fontWeight: 700,
-            fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
-            boxShadow: `0 4px 14px ${TOKENS.navyDeep}22`
-          }}
-        >
-          ✦ Assign New Task
-        </button>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button
+            onClick={handleOpenAddEmpModal}
+            style={{
+              background: "#fff", color: TOKENS.navyDeep, border: `1.5px solid ${TOKENS.navyDeep}`,
+              borderRadius: 12, padding: "9px 16px", fontWeight: 700,
+              fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
+            }}
+          >
+            ✦ Add Employee
+          </button>
+          <button
+            onClick={handleOpenAssignModal}
+            style={{
+              background: TOKENS.navyDeep, color: "#fff", border: "none",
+              borderRadius: 12, padding: "10px 18px", fontWeight: 700,
+              fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
+              boxShadow: `0 4px 14px ${TOKENS.navyDeep}22`
+            }}
+          >
+            ✦ Assign New Task
+          </button>
+        </div>
       </div>
 
       {/* Search */}
@@ -320,6 +382,172 @@ export function TeamScreen({ onSelectEmp }) {
                 }}
               >
                 {loading ? "Assigning..." : "Assign Task"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Add Employee Modal overlay */}
+      {isAddEmpOpen && (
+        <div style={{
+          position: "fixed", inset: 0,
+          background: "rgba(10,21,45,0.45)",
+          backdropFilter: "blur(6px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 9999, padding: 16,
+        }}>
+          <form onSubmit={handleAddEmployee} style={{
+            background: "#fff", borderRadius: 20,
+            width: "100%", maxWidth: 440, padding: 24,
+            boxShadow: "0 24px 60px rgba(10,25,50,0.22)",
+            border: `1.5px solid ${TOKENS.border}`,
+          }} className="screen-enter">
+            <h3 style={{ fontFamily: "Fraunces, serif", fontSize: 18, fontWeight: 700, color: TOKENS.navyDeep, margin: "0 0 16px" }}>
+              Add New Employee Profile
+            </h3>
+
+            {/* Employee ID */}
+            <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
+              EMPLOYEE ID / USERNAME
+            </label>
+            <input
+              placeholder="e.g. FP-WR-005"
+              value={newEmpId}
+              onChange={(e) => setNewEmpId(e.target.value)}
+              style={{
+                width: "100%", padding: "10px 12px", borderRadius: 10,
+                border: `1.5px solid ${TOKENS.border}`, fontSize: 13.5,
+                background: TOKENS.cream, outline: "none", color: TOKENS.ink,
+                marginBottom: 16,
+              }}
+            />
+
+            {/* Full Name */}
+            <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
+              FULL NAME
+            </label>
+            <input
+              placeholder="e.g. Arjun Mehta"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              style={{
+                width: "100%", padding: "10px 12px", borderRadius: 10,
+                border: `1.5px solid ${TOKENS.border}`, fontSize: 13.5,
+                background: TOKENS.cream, outline: "none", color: TOKENS.ink,
+                marginBottom: 16,
+              }}
+            />
+
+            {/* Role */}
+            <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
+              JOB ROLE / DESIGNATION
+            </label>
+            <input
+              placeholder="e.g. Field Agent"
+              value={newRole}
+              onChange={(e) => setNewRole(e.target.value)}
+              style={{
+                width: "100%", padding: "10px 12px", borderRadius: 10,
+                border: `1.5px solid ${TOKENS.border}`, fontSize: 13.5,
+                background: TOKENS.cream, outline: "none", color: TOKENS.ink,
+                marginBottom: 16,
+              }}
+            />
+
+            {/* Client Name */}
+            <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
+              CLIENT PARTNER
+            </label>
+            <input
+              placeholder="e.g. GoldPE Client"
+              value={newClient}
+              onChange={(e) => setNewClient(e.target.value)}
+              style={{
+                width: "100%", padding: "10px 12px", borderRadius: 10,
+                border: `1.5px solid ${TOKENS.border}`, fontSize: 13.5,
+                background: TOKENS.cream, outline: "none", color: TOKENS.ink,
+                marginBottom: 16,
+              }}
+            />
+
+            {/* Team Name */}
+            <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
+              ASSIGNED TEAM
+            </label>
+            <input
+              placeholder="e.g. Western Region"
+              value={newTeam}
+              onChange={(e) => setNewTeam(e.target.value)}
+              style={{
+                width: "100%", padding: "10px 12px", borderRadius: 10,
+                border: `1.5px solid ${TOKENS.border}`, fontSize: 13.5,
+                background: TOKENS.cream, outline: "none", color: TOKENS.ink,
+                marginBottom: 16,
+              }}
+            />
+
+            {/* Joining Date */}
+            <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
+              JOINING DATE
+            </label>
+            <input
+              type="date"
+              value={newJoiningDate}
+              onChange={(e) => setNewJoiningDate(e.target.value)}
+              style={{
+                width: "100%", padding: "10px 12px", borderRadius: 10,
+                border: `1.5px solid ${TOKENS.border}`, fontSize: 13.5,
+                background: TOKENS.cream, outline: "none", color: TOKENS.ink,
+                marginBottom: 16,
+              }}
+            />
+
+            {/* Password */}
+            <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
+              PASSWORD (SET BY MANAGER)
+            </label>
+            <input
+              type="password"
+              placeholder="e.g. arjun123"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              style={{
+                width: "100%", padding: "10px 12px", borderRadius: 10,
+                border: `1.5px solid ${TOKENS.border}`, fontSize: 13.5,
+                background: TOKENS.cream, outline: "none", color: TOKENS.ink,
+                marginBottom: 16,
+              }}
+            />
+
+            {errorAdd && (
+              <div style={{ color: TOKENS.danger, fontSize: 12, fontWeight: 600, marginBottom: 14 }}>
+                ⚠️ {errorAdd}
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                type="button"
+                onClick={() => setIsAddEmpOpen(false)}
+                style={{
+                  flex: 1, padding: "10px 14px", borderRadius: 10,
+                  border: `1.5px solid ${TOKENS.border}`, background: "#fff",
+                  color: TOKENS.ink, fontWeight: 700, fontSize: 13, cursor: "pointer",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loadingAdd}
+                style={{
+                  flex: 1, padding: "10px 14px", borderRadius: 10,
+                  border: "none", background: TOKENS.navyDeep,
+                  color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer",
+                }}
+              >
+                {loadingAdd ? "Creating..." : "Create Profile"}
               </button>
             </div>
           </form>

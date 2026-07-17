@@ -163,8 +163,13 @@ async function getDb() {
 
 // Helper: run a statement (INSERT/UPDATE/DELETE)
 function run(database, sql, params = []) {
-  database.run(sql, params);
-  saveDb();
+  try {
+    database.run(sql, params);
+    saveDb();
+  } catch (err) {
+    console.error("[DB run error]", sql.slice(0, 80), err.message);
+    throw err;
+  }
 }
 
 // Helper: get one row

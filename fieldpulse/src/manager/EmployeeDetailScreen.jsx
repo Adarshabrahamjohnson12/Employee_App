@@ -5,10 +5,11 @@ import { SectionLabel } from "../components/SectionLabel";
 import { StatusPill } from "../components/StatusPill";
 import { PerformanceGauge } from "../components/PerformanceGauge";
 import { useApp } from "../context/AppContext";
-import { ArrowLeft, MapPin, Phone, Heart, Briefcase, Calendar, Award, CheckCircle2, Clock } from "lucide-react";
+import { ArrowLeft, MapPin, Phone, Heart, Briefcase, Calendar, Award, CheckCircle2, Clock, KeyRound, Eye, EyeOff } from "lucide-react";
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid
 } from "recharts";
+
 
 function InfoRow({ label, value, color }) {
   return (
@@ -25,11 +26,35 @@ function InfoRow({ label, value, color }) {
 const SUB_TABS = ["Profile", "OD History", "Performance", "Reimbursements"];
 
 export function EmployeeDetailScreen({ empId, onBack }) {
-  const { getEmployee, tasks } = useApp();
+  const { getEmployee, tasks, resetEmployeePassword } = useApp();
   const emp = getEmployee(empId);
   const [sub, setSub] = useState("Profile");
 
+  // Reset password state
+  const [showPwReset, setShowPwReset] = useState(false);
+  const [newPw, setNewPw] = useState("");
+  const [showPw, setShowPw] = useState(false);
+  const [pwLoading, setPwLoading] = useState(false);
+  const [pwMsg, setPwMsg] = useState("");
+  const [pwErr, setPwErr] = useState("");
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setPwErr(""); setPwMsg("");
+    if (newPw.length < 4) { setPwErr("Password must be at least 4 characters."); return; }
+    setPwLoading(true);
+    try {
+      await resetEmployeePassword(emp.employee_id, newPw);
+      setPwMsg("Password updated successfully!");
+      setNewPw("");
+      setTimeout(() => { setPwMsg(""); setShowPwReset(false); }, 2500);
+    } catch (err) {
+      setPwErr(err.response?.data?.error || "Failed to update password.");
+    } finally { setPwLoading(false); }
+  };
+
   if (!emp) return null;
+
 
   const myTasks = emp.tasks || [];
   const CATEGORY_EMOJI = { Travel: "🚌", Food: "🍽️", Accommodation: "🏨", Other: "📎" };
@@ -141,6 +166,80 @@ export function EmployeeDetailScreen({ empId, onBack }) {
                 </div>
               ))}
             </div>
+          </Card>
+
+          {/* Reset Password */}
+          <SectionLabel>Login Access</SectionLabel>
+          <Card style={{ padding: "14px 16px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{
+                  width: 34, height: 34, borderRadius: 10,
+                  background: `${TOKENS.navyDeep}12`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  <KeyRound size={16} color={TOKENS.navyDeep} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: TOKENS.ink }}>Login Password</div>
+                  <div style={{ fontSize: 11, color: TOKENS.muted }}>Set or reset employee portal access</div>
+                </div>
+              </div>
+              <button
+                onClick={() => { setShowPwReset(v => !v); setPwErr(""); setPwMsg(""); setNewPw(""); }}
+                style={{
+                  padding: "7px 14px", borderRadius: 10, border: `1.5px solid ${TOKENS.navyDeep}`,
+                  background: showPwReset ? TOKENS.navyDeep : "#fff",
+                  color: showPwReset ? "#fff" : TOKENS.navyDeep,
+                  fontSize: 12, fontWeight: 700, cursor: "pointer",
+                }}
+              >
+                {showPwReset ? "Cancel" : "Set Password"}
+              </button>
+            </div>
+
+            {showPwReset && (
+              <form onSubmit={handleResetPassword} style={{ marginTop: 14, borderTop: `1px solid ${TOKENS.border}`, paddingTop: 14 }}>
+                <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
+                  NEW PASSWORD FOR {emp.name.toUpperCase()}
+                </label>
+                <div style={{ position: "relative", marginBottom: 12 }}>
+                  <input
+                    type={showPw ? "text" : "password"}
+                    value={newPw}
+                    onChange={e => setNewPw(e.target.value)}
+                    placeholder="Enter new password (min. 4 chars)"
+                    style={{
+                      width: "100%", padding: "10px 40px 10px 12px", borderRadius: 10,
+                      border: `1.5px solid ${TOKENS.border}`, fontSize: 13.5,
+                      outline: "none", color: TOKENS.ink, background: TOKENS.cream,
+                    }}
+                  />
+                  <button type="button" onClick={() => setShowPw(v => !v)} style={{
+                    position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
+                    border: "none", background: "none", cursor: "pointer", padding: 0,
+                  }}>
+                    {showPw ? <EyeOff size={16} color={TOKENS.muted} /> : <Eye size={16} color={TOKENS.muted} />}
+                  </button>
+                </div>
+
+                {pwErr && <div style={{ fontSize: 12, color: TOKENS.danger, fontWeight: 600, marginBottom: 10 }}>⚠️ {pwErr}</div>}
+                {pwMsg && <div style={{ fontSize: 12, color: TOKENS.success, fontWeight: 600, marginBottom: 10 }}>✓ {pwMsg}</div>}
+
+                <button
+                  type="submit"
+                  disabled={pwLoading}
+                  style={{
+                    width: "100%", padding: "10px 14px", borderRadius: 10,
+                    border: "none", background: TOKENS.navyDeep, color: "#fff",
+                    fontWeight: 700, fontSize: 13, cursor: "pointer",
+                    opacity: pwLoading ? 0.7 : 1,
+                  }}
+                >
+                  {pwLoading ? "Updating…" : "Confirm Password"}
+                </button>
+              </form>
+            )}
           </Card>
         </div>
       )}
