@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "npm install --prefix fieldpulse-api && npm install --prefix fieldpulse && npm run build --prefix fieldpulse",
-    "start": "npm start --prefix fieldpulse-api"
+    "build": "npm --prefix fieldpulse-api install && npm --prefix fieldpulse install && npm --prefix fieldpulse run build",
+    "start": "npm --prefix fieldpulse-api run start"
   }
 }
