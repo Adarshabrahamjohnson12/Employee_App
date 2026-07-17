@@ -70,7 +70,15 @@ function buildEmployee(db, emp) {
       from: o.from_date,
       to: o.to_date
     })),
-    attendance: att.reduce((acc, r) => { acc[r.date] = r.status; return acc; }, {}),
+    attendance: (() => {
+      const acc = att.reduce((a, r) => { a[r.date] = r.status; return a; }, {});
+      if (emp.on_od) {
+        acc[today] = "od";
+      } else if (emp.checked_in) {
+        acc[today] = "present";
+      }
+      return acc;
+    })(),
     tasks: tasks,
     aadhaar: { front: emp.aadhaar_front_path ? `/uploads/${path.basename(emp.aadhaar_front_path)}` : null, back: emp.aadhaar_back_path ? `/uploads/${path.basename(emp.aadhaar_back_path)}` : null },
     selfie: emp.selfie_path ? `/uploads/${path.basename(emp.selfie_path)}` : null,

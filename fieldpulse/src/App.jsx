@@ -69,8 +69,8 @@ function LoginScreen() {
               boxShadow: `0 8px 30px ${TOKENS.gold}44`,
             }}
           />
-          <h1 style={{ fontFamily: "Fraunces, serif", fontSize: 40, fontWeight: 700, color: "#fff", margin: 0, lineHeight: 1.2 }}>
-            FieldPulse
+          <h1 style={{ fontFamily: "Fraunces, serif", fontSize: 36, fontWeight: 700, color: "#fff", margin: 0, lineHeight: 1.2 }}>
+            GoldPE- Task console
           </h1>
           <p style={{ fontSize: 16, color: "#93A4C0", marginTop: 8, lineHeight: 1.5 }}>
             Enterprise field agent tracking, real-time geo-validation, and performance analytics for GoldPE Western Region.
