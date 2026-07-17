@@ -222,8 +222,9 @@ export function AppProvider({ children }) {
     if (currentUser?.role === "employee") {
       await loadEmployeeData(currentUser.employeeId);
     }
+    await refreshTeam();
     return res.data;
-  }, [currentUser, loadEmployeeData]);
+  }, [currentUser, loadEmployeeData, refreshTeam]);
 
   const fetchMyDailyReports = useCallback(async () => {
     const res = await api.get("/reports/my");

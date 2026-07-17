@@ -40,6 +40,11 @@ export function EverydayReportScreen() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const todayStr = getTodayDateStr();
+    if (date > todayStr) {
+      setErrorMsg("Cannot submit reports for future dates. Please select today or a past date.");
+      return;
+    }
     if (!work.trim()) {
       setErrorMsg("Please describe the work completed today.");
       return;
@@ -177,6 +182,7 @@ export function EverydayReportScreen() {
             <input
               type="date"
               value={date}
+              max={getTodayDateStr()}
               onChange={(e) => setDate(e.target.value)}
               required
               style={{

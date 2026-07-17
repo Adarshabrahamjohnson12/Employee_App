@@ -17,6 +17,10 @@ router.post("/", auth, async (req, res) => {
 
     const reportId = `REP-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     const reportDate = date || new Date().toISOString().split("T")[0];
+    const today = new Date().toISOString().split("T")[0];
+    if (reportDate > today) {
+      return res.status(400).json({ error: "Cannot submit reports for future dates. Please select today or a past date." });
+    }
     const numericHours = parseFloat(hours) || 0;
     const db = await getDb();
 
