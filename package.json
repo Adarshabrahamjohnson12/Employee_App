@@ -3,9 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "npm run build-backend && npm run build-frontend",
-    "build-backend": "cd fieldpulse-api && npm install",
-    "build-frontend": "cd fieldpulse && npm install && npm run build",
-    "start": "cd fieldpulse-api && npm start"
+    "build": "npm install --prefix fieldpulse-api && npm install --prefix fieldpulse && npm run build --prefix fieldpulse",
+    "start": "npm start --prefix fieldpulse-api"
   }
 }
