@@ -1,6 +1,15 @@
 import axios from "axios";
 
-const BASE_URL = "/api";
+// FOR MOBILE APP: Update this to your actual deployed Render backend URL
+const DEPLOYED_BACKEND_URL = "https://employee-app.onrender.com";
+
+const isNativeMobile = typeof window !== "undefined" && (
+  window.location.protocol === "file:" ||
+  window.location.origin.includes("capacitor://") ||
+  (window.location.origin.startsWith("http://localhost") && !window.location.port)
+);
+
+const BASE_URL = isNativeMobile ? `${DEPLOYED_BACKEND_URL}/api` : "/api";
 
 const api = axios.create({ baseURL: BASE_URL });
 
