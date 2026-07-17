@@ -12,11 +12,13 @@ import {
 export function OverviewScreen({ onSelectEmp }) {
   const { team, tasks } = useApp();
 
-  const checkedInCount = team.filter((e) => e.checkedIn).length;
-  const onODCount      = team.filter((e) => e.onOD).length;
-  const absentCount    = team.filter((e) => !e.checkedIn && !e.onOD).length;
-  const avgScore       = Math.round(team.reduce((s, e) => s + e.score, 0) / team.length);
-  const totalTasksDone = team.reduce((s, e) => s + e.tasksToday.done, 0);
+  const today = new Date().toISOString().slice(0, 10);
+  const checkedInCount   = team.filter((e) => e.checkedIn).length;
+  const onODCount        = team.filter((e) => e.onOD).length;
+  const dailyReportCount = team.filter((e) => e.hasSubmittedReportToday || (e.reports && e.reports.some(r => r.date === today))).length;
+  const absentCount      = team.filter((e) => !e.checkedIn && !e.onOD).length;
+  const avgScore         = team.length ? Math.round(team.reduce((s, e) => s + e.score, 0) / team.length) : 0;
+  const totalTasksDone   = team.reduce((s, e) => s + (e.tasksToday?.done || 0), 0);
 
   // City distribution
   const cityMap = {};
@@ -41,12 +43,12 @@ export function OverviewScreen({ onSelectEmp }) {
       {/* KPI tiles */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
         {[
-          { label: "Checked In", value: `${checkedInCount}/${team.length}`, color: TOKENS.success },
-          { label: "On OD",      value: onODCount,    color: TOKENS.blue },
-          { label: "Absent",     value: absentCount,  color: TOKENS.danger },
-          { label: "Avg Score",  value: avgScore,     color: TOKENS.gold },
-          { label: "Tasks Done", value: totalTasksDone, color: TOKENS.navyDeep },
-          { label: "Team Size",  value: team.length,  color: TOKENS.muted },
+          { label: "Checked In",   value: `${checkedInCount}/${team.length}`, color: TOKENS.success },
+          { label: "On OD",        value: onODCount,                          color: TOKENS.blue },
+          { label: "Daily Report", value: `${dailyReportCount}/${team.length}`, color: TOKENS.gold },
+          { label: "Absent",       value: absentCount,                        color: TOKENS.danger },
+          { label: "Avg Score",    value: avgScore,                           color: TOKENS.gold },
+          { label: "Tasks Done",   value: totalTasksDone,                     color: TOKENS.navyDeep },
         ].map(({ label, value, color }) => (
           <Card key={label} style={{ padding: 12, textAlign: "center" }}>
             <div style={{ fontFamily: "Fraunces, serif", fontSize: 22, fontWeight: 700, color }}>{value}</div>

@@ -7,7 +7,7 @@ import { useApp } from "../context/AppContext";
 import { getImageUrl } from "../api/client";
 import { MapPin, ChevronRight, Search } from "lucide-react";
 
-const FILTERS = ["All", "Checked In", "On OD", "Absent"];
+const FILTERS = ["All", "Checked In", "On OD", "Daily Report", "Absent"];
 
 export function TeamScreen({ onSelectEmp }) {
   const { team, assignTask, addEmployee } = useApp();
@@ -108,14 +108,16 @@ export function TeamScreen({ onSelectEmp }) {
     }
   };
 
+  const today = new Date().toISOString().slice(0, 10);
   const filtered = team.filter((emp) => {
     const matchSearch = emp.name.toLowerCase().includes(search.toLowerCase()) ||
-      emp.lastLocation.toLowerCase().includes(search.toLowerCase());
+      (emp.lastLocation || "").toLowerCase().includes(search.toLowerCase());
     if (!matchSearch) return false;
     if (filter === "All") return true;
-    if (filter === "Checked In") return emp.checkedIn && !emp.onOD;
-    if (filter === "On OD")      return emp.onOD;
-    if (filter === "Absent")     return !emp.checkedIn && !emp.onOD;
+    if (filter === "Checked In")   return emp.checkedIn && !emp.onOD;
+    if (filter === "On OD")        return emp.onOD;
+    if (filter === "Daily Report") return emp.hasSubmittedReportToday || (emp.reports && emp.reports.some(r => r.date === today));
+    if (filter === "Absent")       return !emp.checkedIn && !emp.onOD;
     return true;
   }).sort((a, b) => b.score - a.score);
 
