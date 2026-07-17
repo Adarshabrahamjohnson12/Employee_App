@@ -7,9 +7,15 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "mobile:sync": "vite build && npx cap sync",
+    "mobile:open:android": "npx cap open android",
+    "mobile:open:ios": "npx cap open ios"
   },
   "dependencies": {
+    "@capacitor/android": "^8.4.2",
+    "@capacitor/core": "^8.4.2",
+    "@capacitor/ios": "^8.4.2",
     "axios": "^1.18.1",
     "lucide-react": "^1.24.0",
     "react": "^19.2.7",
@@ -17,6 +23,7 @@
     "recharts": "^3.9.2"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.4.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">FieldPulse</string>
+    <string name="title_activity_main">FieldPulse</string>
+    <string name="package_name">com.goldpe.fieldpulse</string>
+    <string name="custom_url_scheme">com.goldpe.fieldpulse</string>
+</resources>
