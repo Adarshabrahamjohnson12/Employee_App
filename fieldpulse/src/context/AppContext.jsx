@@ -115,22 +115,26 @@ export function AppProvider({ children }) {
   const doCheckIn = useCallback(async (location) => {
     await api.post("/checkin", { lat: location.lat, lng: location.lng, accuracy: location.accuracy, city: location.city, isRealGps: location.real });
     await loadEmployeeData(currentUser.employeeId);
-  }, [currentUser, loadEmployeeData]);
+    await refreshTeam();
+  }, [currentUser, loadEmployeeData, refreshTeam]);
 
   const doCheckOut = useCallback(async () => {
     await api.post("/checkin/out");
     await loadEmployeeData(currentUser.employeeId);
-  }, [currentUser, loadEmployeeData]);
+    await refreshTeam();
+  }, [currentUser, loadEmployeeData, refreshTeam]);
 
   const declareOD = useCallback(async (record) => {
     await api.post("/od", record);
     await loadEmployeeData(currentUser.employeeId);
-  }, [currentUser, loadEmployeeData]);
+    await refreshTeam();
+  }, [currentUser, loadEmployeeData, refreshTeam]);
 
   const markODArrived = useCallback(async (odId, location) => {
     await api.patch(`/od/${odId}/arrive`, { lat: location.lat, lng: location.lng, city: location.city });
     await loadEmployeeData(currentUser.employeeId);
-  }, [currentUser, loadEmployeeData]);
+    await refreshTeam();
+  }, [currentUser, loadEmployeeData, refreshTeam]);
 
   const completeTask = useCallback(async (taskId, location, report) => {
     await api.patch(`/tasks/${taskId}/complete`, {

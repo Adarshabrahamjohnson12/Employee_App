@@ -1,11 +1,10 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { TOKENS } from "../tokens";
 import { Card } from "../components/Card";
 import { GpsPulse } from "../components/GpsPulse";
 import { SectionLabel } from "../components/SectionLabel";
 import { StatusPill } from "../components/StatusPill";
 import { captureLocation } from "../hooks/useGPS";
-import { fmtTime } from "../hooks/useClock";
 import { useApp } from "../context/AppContext";
 import { LogIn, LogOut, Clock, MapPin, Navigation, AlertCircle, CheckCircle2, X } from "lucide-react";
 
@@ -13,23 +12,40 @@ import { LogIn, LogOut, Clock, MapPin, Navigation, AlertCircle, CheckCircle2, X 
 function OfficeCheckIn({ emp }) {
   const { doCheckIn, doCheckOut } = useApp();
   const [capturing, setCapturing] = useState(false);
-  const [verified, setVerified] = useState(emp.checkedIn);
+  const [verified, setVerified] = useState(!!emp.checkedIn);
   const [location, setLocation] = useState(emp.checkInLocation || null);
+
+  // Sync component state with global employee state when navigated or updated
+  useEffect(() => {
+    setVerified(!!emp.checkedIn);
+    if (emp.checkInLocation) {
+      setLocation(emp.checkInLocation);
+    }
+  }, [emp.checkedIn, emp.checkInLocation]);
 
   const handleCheckIn = useCallback(() => {
     setCapturing(true);
-    setVerified(false);
-    captureLocation((loc) => {
+    captureLocation(async (loc) => {
       setLocation(loc);
-      setCapturing(false);
-      setVerified(true);
-      doCheckIn(emp.id, loc);
+      try {
+        await doCheckIn(loc);
+        setVerified(true);
+      } catch (err) {
+        console.error("Check in error:", err);
+      } finally {
+        setCapturing(false);
+      }
     });
-  }, [emp.id, doCheckIn]);
+  }, [doCheckIn]);
 
-  const handleCheckOut = () => {
-    doCheckOut(emp.id);
-    setVerified(false);
+  const handleCheckOut = async () => {
+    try {
+      await doCheckOut();
+      setVerified(false);
+      setLocation(null);
+    } catch (err) {
+      console.error("Check out error:", err);
+    }
   };
 
   return (
@@ -44,7 +60,7 @@ function OfficeCheckIn({ emp }) {
           {capturing
             ? "Confirming you're at an approved site — hold on."
             : verified
-            ? "Your check-in has been geo-tagged and timestamped."
+            ? "Your check-in has been geo-tagged and timestamped for your manager."
             : "Tap below to capture your GPS coordinates and log attendance."}
         </div>
 
@@ -56,14 +72,15 @@ function OfficeCheckIn({ emp }) {
             {[
               ["Latitude", location.lat?.toFixed(5)],
               ["Longitude", location.lng?.toFixed(5)],
+              ["City / Location", location.city || "Detected"],
               ["Accuracy", location.accuracy ? `±${location.accuracy} m` : "Approximate"],
-              ["Source", location.real ? "Live GPS" : "Fallback (permission denied)"],
+              ["GPS Source", location.real ? "Live GPS" : "Fallback (permission denied)"],
             ].map(([k, v]) => (
               <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginTop: 5 }}>
                 <span style={{ color: TOKENS.muted }}>{k}</span>
                 <span style={{
                   fontWeight: 600,
-                  color: k === "Source" ? (location.real ? TOKENS.success : TOKENS.danger) : TOKENS.ink,
+                  color: k === "GPS Source" ? (location.real ? TOKENS.success : TOKENS.danger) : TOKENS.ink,
                 }}>{v}</span>
               </div>
             ))}
@@ -80,7 +97,7 @@ function OfficeCheckIn({ emp }) {
             transition: "opacity 0.2s",
           }}>
             <LogIn size={17} />
-            {capturing ? "Capturing…" : "Check in with GPS"}
+            {capturing ? "Capturing GPS..." : "Check in with GPS"}
           </button>
         ) : (
           <button onClick={handleCheckOut} style={{
@@ -98,7 +115,7 @@ function OfficeCheckIn({ emp }) {
       <SectionLabel>Today's log</SectionLabel>
       <Card style={{ padding: 0 }}>
         {[
-          { label: "Checked in", time: emp.checkInTime || "—", Icon: LogIn, color: emp.checkedIn ? TOKENS.success : TOKENS.muted },
+          { label: "Checked in", time: emp.checkInTime || (emp.checkedIn ? "Checked In" : "—"), Icon: LogIn, color: emp.checkedIn ? TOKENS.success : TOKENS.muted },
           { label: "Lunch break", time: "1:02 PM – 1:38 PM", Icon: Clock, color: TOKENS.muted },
           { label: "Checked out", time: emp.checkedIn ? "In progress" : "—", Icon: LogOut, color: TOKENS.muted },
         ].map((row, i) => (
@@ -120,11 +137,18 @@ function OfficeCheckIn({ emp }) {
 function ODStatus({ emp }) {
   const { declareOD, markODArrived } = useApp();
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ city: "", client: emp.clientName, from: "", to: "" });
+  const [form, setForm] = useState({
+    city: "",
+    client: emp.clientName || "",
+    from: new Date().toISOString().slice(0, 10),
+    to: new Date().toISOString().slice(0, 10)
+  });
   const [markingId, setMarkingId] = useState(null);
   const [capturing, setCapturing] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleDeclare = () => {
+  const handleDeclare = async (e) => {
+    if (e) e.preventDefault();
     if (!form.city || !form.from || !form.to) return;
     const record = {
       id: `od-${Date.now()}`,
@@ -136,18 +160,30 @@ function ODStatus({ emp }) {
       arrivalLocation: null,
       arrivalTime: null,
     };
-    declareOD(emp.id, record);
-    setShowForm(false);
-    setForm({ city: "", client: emp.clientName, from: "", to: "" });
+    try {
+      setSubmitting(true);
+      await declareOD(record);
+      setShowForm(false);
+      setForm({ city: "", client: emp.clientName || "", from: new Date().toISOString().slice(0, 10), to: new Date().toISOString().slice(0, 10) });
+    } catch (err) {
+      console.error("Declare OD error:", err);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleArrived = (odId) => {
     setMarkingId(odId);
     setCapturing(true);
-    captureLocation((loc) => {
-      markODArrived(emp.id, odId, loc);
-      setCapturing(false);
-      setMarkingId(null);
+    captureLocation(async (loc) => {
+      try {
+        await markODArrived(odId, loc);
+      } catch (err) {
+        console.error("Mark OD arrived error:", err);
+      } finally {
+        setCapturing(false);
+        setMarkingId(null);
+      }
     });
   };
 
@@ -163,7 +199,7 @@ function ODStatus({ emp }) {
       }}>
         <div style={{ fontSize: 28 }}>{emp.onOD ? "✈️" : "🏢"}</div>
         <div style={{ fontFamily: "Fraunces, serif", fontSize: 16, fontWeight: 600, color: TOKENS.navyDeep, marginTop: 8 }}>
-          {emp.onOD ? `Currently on OD — ${emp.odCity}` : "Not on OD today"}
+          {emp.onOD ? `Currently on OD — ${emp.odCity || emp.lastLocation}` : "Not on OD today"}
         </div>
         <div style={{ fontSize: 12, color: TOKENS.muted, marginTop: 4 }}>
           {emp.onOD ? "Tap an OD record below to mark arrival with GPS." : "Declare an OD trip to track your city visits."}
@@ -190,36 +226,45 @@ function ODStatus({ emp }) {
               <X size={18} color={TOKENS.muted} />
             </button>
           </div>
-          {[
-            { label: "Destination City *", field: "city", placeholder: "e.g. Pune, Nashik…" },
-            { label: "Client Name", field: "client", placeholder: "Client name" },
-            { label: "From Date *", field: "from", type: "date" },
-            { label: "To Date *", field: "to", type: "date" },
-          ].map(({ label, field, placeholder, type }) => (
-            <div key={field} style={{ marginBottom: 12 }}>
-              <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 5 }}>
-                {label}
-              </label>
-              <input
-                type={type || "text"}
-                placeholder={placeholder}
-                value={form[field]}
-                onChange={(e) => setForm((f) => ({ ...f, [field]: e.target.value }))}
-                style={{
-                  width: "100%", padding: "10px 12px", borderRadius: 10,
-                  border: `1.5px solid ${TOKENS.border}`, fontSize: 13, color: TOKENS.ink,
-                  outline: "none", background: TOKENS.cream,
-                }}
-              />
-            </div>
-          ))}
-          <button onClick={handleDeclare} style={{
-            width: "100%", background: TOKENS.navyDeep, color: "#fff",
-            border: "none", borderRadius: 12, padding: "12px 16px",
-            fontWeight: 700, fontSize: 13, cursor: "pointer",
-          }}>
-            Submit OD Declaration
-          </button>
+
+          <form onSubmit={handleDeclare}>
+            {[
+              { label: "Destination City *", field: "city", placeholder: "e.g. Pune, Nashik…" },
+              { label: "Client Name", field: "client", placeholder: "Client name" },
+              { label: "From Date *", field: "from", type: "date" },
+              { label: "To Date *", field: "to", type: "date" },
+            ].map(({ label, field, placeholder, type }) => (
+              <div key={field} style={{ marginBottom: 12 }}>
+                <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 5 }}>
+                  {label}
+                </label>
+                <input
+                  type={type || "text"}
+                  placeholder={placeholder}
+                  value={form[field]}
+                  required={field !== "client"}
+                  onChange={(e) => setForm((f) => ({ ...f, [field]: e.target.value }))}
+                  style={{
+                    width: "100%", padding: "10px 12px", borderRadius: 10,
+                    border: `1.5px solid ${TOKENS.border}`, fontSize: 13, color: TOKENS.ink,
+                    outline: "none", background: TOKENS.cream,
+                  }}
+                />
+              </div>
+            ))}
+            <button
+              type="submit"
+              disabled={submitting}
+              style={{
+                width: "100%", background: TOKENS.navyDeep, color: "#fff",
+                border: "none", borderRadius: 12, padding: "12px 16px",
+                fontWeight: 700, fontSize: 13, cursor: submitting ? "wait" : "pointer",
+                opacity: submitting ? 0.7 : 1,
+              }}
+            >
+              {submitting ? "Submitting..." : "Submit OD Declaration"}
+            </button>
+          </form>
         </Card>
       )}
 
@@ -289,7 +334,7 @@ export function CheckInScreen({ emp }) {
       <div style={{
         display: "flex", background: "#fff", borderRadius: 14,
         padding: 4, gap: 4, marginBottom: 16,
-        border: `1px solid ${TOKENS.border}`,
+        border: `1.5px solid ${TOKENS.border}`,
       }}>
         {[
           { id: "office", label: "Office Check-In" },

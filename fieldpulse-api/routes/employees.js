@@ -22,7 +22,10 @@ function buildEmployee(db, emp) {
     ...emp,
     checkedIn: !!emp.checked_in,
     onOD: !!emp.on_od,
+    odCity: emp.od_city,
     checkInTime: emp.check_in_time,
+    lastLocation: emp.last_location || emp.check_in_city || emp.od_city || "Off-site",
+    lastSeen: emp.last_seen || emp.check_in_time || "Today",
     checkInLocation: emp.check_in_lat ? {
       lat: emp.check_in_lat,
       lng: emp.check_in_lng,
