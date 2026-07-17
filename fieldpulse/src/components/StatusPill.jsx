@@ -14,6 +14,8 @@ const STATUS_MAP = {
   "not-arrived":{ bg: TOKENS.dangerBg, fg: TOKENS.danger,   label: "Not Arrived" },
   "on-time":   { bg: TOKENS.successBg, fg: TOKENS.success,  label: "On Time" },
   completed:   { bg: TOKENS.successBg, fg: TOKENS.success,  label: "Completed" },
+  report:      { bg: `${TOKENS.gold}22`, fg: TOKENS.gold,     label: "Report Sent" },
+  "daily-report": { bg: `${TOKENS.gold}22`, fg: TOKENS.gold,  label: "Report Sent" },
 };
 
 export function StatusPill({ status, style }) {

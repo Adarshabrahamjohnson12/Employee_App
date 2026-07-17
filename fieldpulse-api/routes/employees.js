@@ -15,11 +15,22 @@ function buildEmployee(db, emp) {
   const att = all(db, `SELECT date, status FROM attendance WHERE employee_id = ?`, [emp.employee_id]);
   const tasks = all(db, `SELECT * FROM tasks WHERE employee_id = ?`, [emp.employee_id]);
   const checkins = all(db, `SELECT * FROM checkins WHERE employee_id = ? ORDER BY timestamp DESC LIMIT 20`, [emp.employee_id]);
+  const reports = all(db, `SELECT * FROM daily_reports WHERE employee_id = ? ORDER BY date DESC`, [emp.employee_id]);
 
+  const today = new Date().toISOString().slice(0, 10);
+  const hasSubmittedReportToday = reports.some(r => r.date === today);
   const doneTasks = tasks.filter(t => t.status === "done").length;
 
   return {
     ...emp,
+    hasSubmittedReportToday,
+    reports: reports.map(r => ({
+      id: r.id,
+      date: r.date,
+      workDescription: r.work_description,
+      hoursSpent: r.hours_spent,
+      createdAt: r.created_at
+    })),
     checkedIn: !!emp.checked_in,
     onOD: !!emp.on_od,
     odCity: emp.od_city,
