@@ -24,6 +24,7 @@ app.use("/api/od",             require("./routes/od"));
 app.use("/api/tasks",          require("./routes/tasks"));
 app.use("/api/reimbursements", require("./routes/reimbursements"));
 app.use("/api/attendance",     require("./routes/attendance"));
+app.use("/api/reports",        require("./routes/reports"));
 
 // Health check
 app.get("/api/health", (_req, res) => res.json({ status: "ok", time: new Date().toISOString() }));

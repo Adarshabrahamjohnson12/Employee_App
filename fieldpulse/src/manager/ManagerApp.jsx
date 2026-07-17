@@ -8,13 +8,15 @@ import { TeamScreen } from "./TeamScreen";
 import { EmployeeDetailScreen } from "./EmployeeDetailScreen";
 import { ReimbursementApprovals } from "./ReimbursementApprovals";
 import { AttendanceScreen } from "./AttendanceScreen";
-import { BarChart3, Users, DollarSign, Calendar, LogOut, Clock, ChevronLeft } from "lucide-react";
+import { ManagerReportsCalendarScreen } from "./ManagerReportsCalendarScreen";
+import { BarChart3, Users, CalendarDays, DollarSign, Calendar, LogOut, Clock, ChevronLeft } from "lucide-react";
 
 const TABS = [
-  { id: "overview",      label: "Overview",    Icon: BarChart3 },
-  { id: "team",          label: "Team",        Icon: Users },
-  { id: "reimbursement", label: "Expenses",    Icon: DollarSign },
-  { id: "attendance",    label: "Attendance",  Icon: Calendar },
+  { id: "overview",      label: "Overview",      Icon: BarChart3 },
+  { id: "team",          label: "Team",          Icon: Users },
+  { id: "reports",       label: "Daily Reports", Icon: CalendarDays },
+  { id: "reimbursement", label: "Expenses",      Icon: DollarSign },
+  { id: "attendance",    label: "Attendance",    Icon: Calendar },
 ];
 
 export function ManagerApp() {
@@ -103,6 +105,7 @@ export function ManagerApp() {
               <>
                 {tab === "overview"      && <OverviewScreen onSelectEmp={(id) => setSelectedEmpId(id)} />}
                 {tab === "team"          && <TeamScreen onSelectEmp={(id) => setSelectedEmpId(id)} />}
+                {tab === "reports"       && <ManagerReportsCalendarScreen />}
                 {tab === "reimbursement" && <ReimbursementApprovals />}
                 {tab === "attendance"    && <AttendanceScreen onSelectEmp={(id) => setSelectedEmpId(id)} />}
               </>
@@ -224,6 +227,7 @@ export function ManagerApp() {
               <>
                 {tab === "overview"      && <OverviewScreen onSelectEmp={(id) => setSelectedEmpId(id)} />}
                 {tab === "team"          && <TeamScreen onSelectEmp={(id) => setSelectedEmpId(id)} />}
+                {tab === "reports"       && <ManagerReportsCalendarScreen />}
                 {tab === "reimbursement" && <ReimbursementApprovals />}
                 {tab === "attendance"    && <AttendanceScreen onSelectEmp={(id) => setSelectedEmpId(id)} />}
               </>

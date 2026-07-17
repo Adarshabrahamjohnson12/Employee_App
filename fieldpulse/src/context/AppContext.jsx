@@ -212,6 +212,29 @@ export function AppProvider({ children }) {
     await api.patch(`/employees/${empId}/reset-password`, { password });
   }, []);
 
+  // ── Daily Work Reports actions ───────────────────────────────────────────
+  const submitDailyReport = useCallback(async (reportData) => {
+    const res = await api.post("/reports", reportData);
+    if (currentUser?.role === "employee") {
+      await loadEmployeeData(currentUser.employeeId);
+    }
+    return res.data;
+  }, [currentUser, loadEmployeeData]);
+
+  const fetchMyDailyReports = useCallback(async () => {
+    const res = await api.get("/reports/my");
+    return res.data;
+  }, []);
+
+  const fetchAllDailyReports = useCallback(async (params = {}) => {
+    const res = await api.get("/reports", { params });
+    return res.data;
+  }, []);
+
+  const fetchCalendarSummary = useCallback(async (month) => {
+    const res = await api.get("/reports/calendar-summary", { params: { month } });
+    return res.data;
+  }, []);
 
   const getEmployee = useCallback((id) => team.find(e => e.id === id || e.employee_id === id), [team]);
 
@@ -227,6 +250,7 @@ export function AppProvider({ children }) {
     updateProfile,
     refreshEmployee, refreshTeam,
     resetEmployeePassword,
+    submitDailyReport, fetchMyDailyReports, fetchAllDailyReports, fetchCalendarSummary,
   };
 
 

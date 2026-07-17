@@ -8,12 +8,14 @@ import { CheckInScreen } from "./CheckInScreen";
 import { TasksScreen } from "./TasksScreen";
 import { ReimbursementScreen } from "./ReimbursementScreen";
 import { ProfileScreen } from "./ProfileScreen";
+import { EverydayReportScreen } from "./EverydayReportScreen";
 import { getImageUrl } from "../api/client";
-import { Home, MapPin, ListChecks, DollarSign, User, LogOut, Clock } from "lucide-react";
+import { Home, MapPin, FileText, ListChecks, DollarSign, User, LogOut, Clock } from "lucide-react";
 
 const TABS = [
   { id: "dashboard",     label: "Home",     Icon: Home },
   { id: "checkin",       label: "Check In", Icon: MapPin },
+  { id: "report",        label: "Report",   Icon: FileText },
   { id: "tasks",         label: "Tasks",    Icon: ListChecks },
   { id: "reimbursement", label: "Expense",  Icon: DollarSign },
   { id: "profile",       label: "Profile",  Icon: User },
@@ -74,6 +76,7 @@ export function EmployeeApp() {
           <div key={tab} className="screen-enter">
             {tab === "dashboard"     && <DashboardScreen     emp={emp} goTab={setTab} />}
             {tab === "checkin"       && <CheckInScreen       emp={emp} />}
+            {tab === "report"        && <EverydayReportScreen />}
             {tab === "tasks"         && <TasksScreen         emp={emp} />}
             {tab === "reimbursement" && <ReimbursementScreen emp={emp} />}
             {tab === "profile"       && <ProfileScreen       emp={emp} />}
@@ -176,6 +179,7 @@ export function EmployeeApp() {
           <div key={tab} className="screen-enter">
             {tab === "dashboard"     && <DashboardScreen     emp={emp} goTab={setTab} />}
             {tab === "checkin"       && <CheckInScreen       emp={emp} />}
+            {tab === "report"        && <EverydayReportScreen />}
             {tab === "tasks"         && <TasksScreen         emp={emp} />}
             {tab === "reimbursement" && <ReimbursementScreen emp={emp} />}
             {tab === "profile"       && <ProfileScreen       emp={emp} />}

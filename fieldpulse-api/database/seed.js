@@ -234,6 +234,69 @@ async function seed() {
       [od.id, od.employee_id, od.city, od.client, od.from_date, od.to_date, od.arrived, od.arrival_location || null, od.arrival_time || null]);
   }
 
+  // Daily Work Reports
+  const DAILY_REPORTS = [
+    {
+      id: "REP-SEED-001",
+      employee_id: "FP-WR-001",
+      date: "2026-07-17",
+      work: "Completed 4 gold consignment intake verifications at BRS Warehouse. Conducted APM unit 14 health check and XRF calibration audit.",
+      time_spent: "7.5 hrs",
+      hours: 7.5,
+      remarks: "Intake verified successfully. All machines working at 100% capacity."
+    },
+    {
+      id: "REP-SEED-002",
+      employee_id: "FP-WR-002",
+      date: "2026-07-17",
+      work: "Onboarded Kalyan Jewellers partner site in Baner, Pune. Handled partner KYC review and signed commission structure sign-off.",
+      time_spent: "8 hrs",
+      hours: 8.0,
+      remarks: "Partner requested follow-up XRF unit demo tomorrow morning."
+    },
+    {
+      id: "REP-SEED-003",
+      employee_id: "FP-WR-004",
+      date: "2026-07-17",
+      work: "Machine deployment lead at Reliance Jewels Nashik outlet. Installed 2 APM units and trained store operators.",
+      time_spent: "8.5 hrs",
+      hours: 8.5,
+      remarks: "Deployment completed ahead of schedule."
+    },
+    {
+      id: "REP-SEED-004",
+      employee_id: "FP-WR-005",
+      date: "2026-07-17",
+      work: "Audited Senco Gold outlet in Surat. Collected weekly partner feedback and verified machine security seals.",
+      time_spent: "6 hrs",
+      hours: 6.0,
+      remarks: "Seals verified intact. Partner requested extra marketing collateral."
+    },
+    {
+      id: "REP-SEED-005",
+      employee_id: "FP-WR-001",
+      date: "2026-07-16",
+      work: "Visited 3 partner jeweller sites in Kandivali. Resolved XRF sensor connection issue at Silver Tier store.",
+      time_spent: "7 hrs",
+      hours: 7.0,
+      remarks: "Replaced faulty sensor cable."
+    },
+    {
+      id: "REP-SEED-006",
+      employee_id: "FP-WR-003",
+      date: "2026-07-16",
+      work: "Installed machine at PC Jeweller Main Branch Vadodara. Completed staff training and collected signed receipt.",
+      time_spent: "8 hrs",
+      hours: 8.0,
+      remarks: "Client satisfied with installation."
+    }
+  ];
+
+  for (const rep of DAILY_REPORTS) {
+    run(db, `INSERT OR IGNORE INTO daily_reports (id, employee_id, date, work, time_spent, hours, remarks) VALUES (?,?,?,?,?,?,?)`,
+      [rep.id, rep.employee_id, rep.date, rep.work, rep.time_spent, rep.hours, rep.remarks]);
+  }
+
   console.log("✅ Seed complete!");
 }
 

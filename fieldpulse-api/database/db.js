@@ -131,6 +131,17 @@ CREATE TABLE IF NOT EXISTS punctuality (
   minutes INTEGER NOT NULL,
   PRIMARY KEY (employee_id, day)
 );
+
+CREATE TABLE IF NOT EXISTS daily_reports (
+  id TEXT PRIMARY KEY,
+  employee_id TEXT NOT NULL,
+  date TEXT NOT NULL,
+  work TEXT NOT NULL,
+  time_spent TEXT NOT NULL,
+  hours REAL DEFAULT 0,
+  remarks TEXT,
+  submitted_at TEXT DEFAULT (datetime('now'))
+);
 `;
 
 // Persist DB to file
@@ -157,6 +168,18 @@ async function getDb() {
   try { db.run("ALTER TABLE tasks ADD COLUMN completion_status TEXT;"); } catch(e){}
   try { db.run("ALTER TABLE tasks ADD COLUMN completion_team TEXT;"); } catch(e){}
   try { db.run("ALTER TABLE tasks ADD COLUMN completion_remarks TEXT;"); } catch(e){}
+  try {
+    db.run(`CREATE TABLE IF NOT EXISTS daily_reports (
+      id TEXT PRIMARY KEY,
+      employee_id TEXT NOT NULL,
+      date TEXT NOT NULL,
+      work TEXT NOT NULL,
+      time_spent TEXT NOT NULL,
+      hours REAL DEFAULT 0,
+      remarks TEXT,
+      submitted_at TEXT DEFAULT (datetime('now'))
+    )`);
+  } catch(e){}
   saveDb();
   return db;
 }
