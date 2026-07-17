@@ -22,8 +22,8 @@ router.post("/", auth, async (req, res) => {
     if (!category || !amount) return res.status(400).json({ error: "category and amount required" });
     const id = `r-${Date.now()}`;
     const db = await getDb();
-    run(db, `INSERT INTO reimbursements (id, employee_id, category, amount, description, date) VALUES (?,?,?,?,?,?)`,
-      [id, req.user.employeeId, category, parseFloat(amount), description || "", date || new Date().toISOString().slice(0, 10)]);
+    run(db, `INSERT INTO reimbursements (id, employee_id, category, amount, description, date, status) VALUES (?,?,?,?,?,?,?)`,
+      [id, req.user.employeeId, category, parseFloat(amount), description || "", date || new Date().toISOString().slice(0, 10), 'pending']);
     res.json({ data: { id, category, amount: parseFloat(amount), description, date, status: "pending" } });
   } catch (err) { console.error(err); res.status(500).json({ error: "Server error" }); }
 });

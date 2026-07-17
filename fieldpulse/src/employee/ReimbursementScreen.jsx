@@ -37,7 +37,7 @@ export function ReimbursementScreen({ emp }) {
       approvedBy: null,
       receipt: form.receipt,
     };
-    addReimbursement(emp.id, req);
+    addReimbursement(req);
     setShowForm(false);
     setForm({ category: "Travel", amount: "", description: "", date: new Date().toISOString().slice(0, 10), receipt: null });
   };
