@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const path = require("path");
-const auth = require("../middleware/auth");
+const auth = require("../middleware/authMiddleware");
 const { getDb, run, all, get } = require("../database/db");
 
 // POST /api/reports — Employee submits an Everyday Work Report
