@@ -67,9 +67,9 @@ export const INITIAL_TEAM = [
       { day: "T", min: -3 }, { day: "F", min: 4 },  { day: "S", min: -8 },
     ],
     reimbursements: [
-      { id: "r1-1", category: "Travel", amount: 1240, description: "Cab fare Mumbai → Pune return", date: "2024-07-10", status: "approved", approvedBy: "Mgr. Sharma" },
+      { id: "r1-1", category: "Travel", amount: 1240, description: "Cab fare Mumbai → Pune return", date: "2024-07-10", status: "approved", approvedBy: "Vijay Rajagopal" },
       { id: "r1-2", category: "Food", amount: 450, description: "Team lunch at BRS client site", date: "2024-07-12", status: "pending", approvedBy: null },
-      { id: "r1-3", category: "Accommodation", amount: 1800, description: "Hotel stay — Nashik OD night", date: "2024-07-05", status: "approved", approvedBy: "Mgr. Sharma" },
+      { id: "r1-3", category: "Accommodation", amount: 1800, description: "Hotel stay — Nashik OD night", date: "2024-07-05", status: "approved", approvedBy: "Vijay Rajagopal" },
     ],
     odHistory: [
       { id: "od1-1", city: "Pune", client: "BRS Gold Pvt Ltd", from: "2024-07-10", to: "2024-07-11", arrived: true, arrivalLocation: "Baner, Pune", arrivalTime: "10:32 AM" },
@@ -111,7 +111,7 @@ export const INITIAL_TEAM = [
       { day: "T", min: 1 }, { day: "F", min: -2 }, { day: "S", min: 5 },
     ],
     reimbursements: [
-      { id: "r2-1", category: "Travel", amount: 860, description: "Train — Mumbai to Pune (2nd AC)", date: "2024-07-09", status: "approved", approvedBy: "Mgr. Sharma" },
+      { id: "r2-1", category: "Travel", amount: 860, description: "Train — Mumbai to Pune (2nd AC)", date: "2024-07-09", status: "approved", approvedBy: "Vijay Rajagopal" },
       { id: "r2-2", category: "Accommodation", amount: 2200, description: "Hotel — Pune client visit 2 nights", date: "2024-07-09", status: "pending", approvedBy: null },
     ],
     odHistory: [
@@ -153,7 +153,7 @@ export const INITIAL_TEAM = [
       { day: "T", min: -2 }, { day: "F", min: 20 }, { day: "S", min: 10 },
     ],
     reimbursements: [
-      { id: "r3-1", category: "Travel", amount: 560, description: "Bus — Surat to Vadodara", date: "2024-07-08", status: "rejected", approvedBy: "Mgr. Sharma", rejectReason: "Receipt not attached" },
+      { id: "r3-1", category: "Travel", amount: 560, description: "Bus — Surat to Vadodara", date: "2024-07-08", status: "rejected", approvedBy: "Vijay Rajagopal", rejectReason: "Receipt not attached" },
       { id: "r3-2", category: "Food", amount: 320, description: "Dinner at site", date: "2024-07-11", status: "pending", approvedBy: null },
     ],
     odHistory: [
@@ -195,8 +195,8 @@ export const INITIAL_TEAM = [
       { day: "T", min: -10 }, { day: "F", min: -8 }, { day: "S", min: -15 },
     ],
     reimbursements: [
-      { id: "r4-1", category: "Travel", amount: 1650, description: "Flight — Mumbai to Nashik + taxi", date: "2024-07-06", status: "approved", approvedBy: "Mgr. Sharma" },
-      { id: "r4-2", category: "Accommodation", amount: 2800, description: "Hotel Panchavati — 2 nights", date: "2024-07-06", status: "approved", approvedBy: "Mgr. Sharma" },
+      { id: "r4-1", category: "Travel", amount: 1650, description: "Flight — Mumbai to Nashik + taxi", date: "2024-07-06", status: "approved", approvedBy: "Vijay Rajagopal" },
+      { id: "r4-2", category: "Accommodation", amount: 2800, description: "Hotel Panchavati — 2 nights", date: "2024-07-06", status: "approved", approvedBy: "Vijay Rajagopal" },
       { id: "r4-3", category: "Other", amount: 380, description: "Machine calibration consumables", date: "2024-07-08", status: "pending", approvedBy: null },
     ],
     odHistory: [
@@ -239,7 +239,7 @@ export const INITIAL_TEAM = [
       { day: "T", min: 2 }, { day: "F", min: -1 }, { day: "S", min: 4 },
     ],
     reimbursements: [
-      { id: "r5-1", category: "Travel", amount: 720, description: "Train Surat → Mumbai for training", date: "2024-07-03", status: "approved", approvedBy: "Mgr. Sharma" },
+      { id: "r5-1", category: "Travel", amount: 720, description: "Train Surat → Mumbai for training", date: "2024-07-03", status: "approved", approvedBy: "Vijay Rajagopal" },
       { id: "r5-2", category: "Food", amount: 280, description: "Client site lunch x2 days", date: "2024-07-11", status: "pending", approvedBy: null },
     ],
     odHistory: [],

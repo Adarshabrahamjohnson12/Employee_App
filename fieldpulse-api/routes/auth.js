@@ -17,8 +17,8 @@ router.post("/login", async (req, res) => {
       if (!row || !bcrypt.compareSync(password, row.password_hash)) {
         return res.status(401).json({ error: "Invalid credentials" });
       }
-      const token = jwt.sign({ id: 0, employeeId: "MANAGER", name: "Mgr. Sharma", role: "manager" }, process.env.JWT_SECRET, { expiresIn: "24h" });
-      return res.json({ token, user: { id: 0, employeeId: "MANAGER", name: "Mgr. Sharma", role: "manager" } });
+      const token = jwt.sign({ id: 0, employeeId: "MANAGER", name: "Vijay Rajagopal", role: "manager" }, process.env.JWT_SECRET, { expiresIn: "24h" });
+      return res.json({ token, user: { id: 0, employeeId: "MANAGER", name: "Vijay Rajagopal", role: "manager" } });
     }
 
     // Employee login

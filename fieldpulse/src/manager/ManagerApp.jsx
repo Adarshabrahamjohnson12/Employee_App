@@ -203,11 +203,11 @@ export function ManagerApp() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14, paddingLeft: 4 }}>
             <div onClick={() => fileInputRef.current.click()} style={{ width: 40, height: 40, borderRadius: "50%", background: TOKENS.goldPale, border: `2.5px solid ${TOKENS.gold}`, display: "flex", alignItems: "center", justifyContent: "center", color: TOKENS.gold, fontSize: 15, fontWeight: 700, cursor: "pointer", overflow: "hidden" }} title="Click to upload profile photo">
-              {managerPic ? <img src={managerPic} alt="Manager Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : "MS"}
+              {managerPic ? <img src={managerPic} alt="Manager Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : "VR"}
             </div>
             <input type="file" accept="image/*" ref={fileInputRef} onChange={handlePicChange} style={{ display: "none" }} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Mgr. Sharma</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Vijay Rajagopal</div>
               <div style={{ fontSize: 11, color: "#8C9DB5", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Western Region Lead</div>
             </div>
           </div>

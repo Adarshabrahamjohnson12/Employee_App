@@ -45,7 +45,7 @@ router.patch("/:id", auth, async (req, res) => {
     const { status, rejectReason } = req.body;
     if (!["approved", "rejected"].includes(status)) return res.status(400).json({ error: "status must be approved or rejected" });
     const db = await getDb();
-    run(db, `UPDATE reimbursements SET status=?, approved_by='Mgr. Sharma', reject_reason=? WHERE id=?`,
+    run(db, `UPDATE reimbursements SET status=?, approved_by='Vijay Rajagopal', reject_reason=? WHERE id=?`,
       [status, rejectReason || null, req.params.id]);
     res.json({ message: `Request ${status}` });
   } catch (err) { console.error(err); res.status(500).json({ error: "Server error" }); }

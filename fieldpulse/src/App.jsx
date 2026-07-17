@@ -140,19 +140,6 @@ function LoginScreen() {
               {loading ? <><span style={{ animation: "spin 1s linear infinite", display: "inline-block" }}>⟳</span> Authenticating…</> : <><LogIn size={18} /> Sign In</>}
             </button>
           </form>
-
-          {/* Quick demo selection */}
-          <div style={{ marginTop: 28 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, marginBottom: 12, textTransform: "uppercase" }}>Quick demo profiles</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {DEMOS.map(d => (
-                <button key={d.id} type="button" onClick={() => { setEmpId(d.id); setPassword(d.pw); setLocalErr(""); }} style={{ background: "#fff", border: `1.5px solid ${TOKENS.border}`, borderRadius: 12, padding: "11px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", transition: "all 0.15s ease", outline: "none" }} className="demo-login-btn">
-                  <span style={{ fontSize: 13, fontWeight: 600, color: TOKENS.ink }}>{d.label}</span>
-                  <span style={{ fontSize: 11, color: TOKENS.muted, fontFamily: "monospace" }}>{d.id}</span>
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     </div>
