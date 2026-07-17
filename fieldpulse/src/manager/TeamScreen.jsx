@@ -170,7 +170,7 @@ export function TeamScreen({ onSelectEmp }) {
       <div style={{ display: "flex", gap: 8, marginBottom: 16, overflowX: "auto", paddingBottom: 2 }}>
         {FILTERS.map((f) => (
           <button key={f} onClick={() => setFilter(f)} style={{
-            padding: "6px 14px", borderRadius: 20, border: "none",
+            padding: "6px 14px", borderRadius: 20,
             background: filter === f ? TOKENS.navyDeep : "#fff",
             color: filter === f ? "#fff" : TOKENS.muted,
             fontSize: 12, fontWeight: 700, cursor: "pointer",
