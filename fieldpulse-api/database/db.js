@@ -2,7 +2,7 @@ const path = require("path");
 const fs = require("fs");
 const initSqlJs = require("sql.js");
 
-const DB_PATH = path.join(__dirname, "..", "fieldpulse.db");
+const DB_PATH = process.env.DB_PATH || path.join(__dirname, "..", "fieldpulse.db");
 
 let db = null;
 
