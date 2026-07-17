@@ -27,9 +27,13 @@ function buildEmployee(db, emp) {
     reports: reports.map(r => ({
       id: r.id,
       date: r.date,
-      workDescription: r.work_description,
-      hoursSpent: r.hours_spent,
-      createdAt: r.created_at
+      work: r.work,
+      workDescription: r.work,
+      timeSpent: r.time_spent,
+      hoursSpent: r.time_spent,
+      hours: r.hours,
+      remarks: r.remarks,
+      submittedAt: r.submitted_at
     })),
     checkedIn: !!emp.checked_in,
     onOD: !!emp.on_od,

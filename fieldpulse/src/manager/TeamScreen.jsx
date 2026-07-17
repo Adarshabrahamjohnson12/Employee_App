@@ -5,7 +5,7 @@ import { SectionLabel } from "../components/SectionLabel";
 import { StatusPill } from "../components/StatusPill";
 import { useApp } from "../context/AppContext";
 import { getImageUrl } from "../api/client";
-import { MapPin, ChevronRight, Search } from "lucide-react";
+import { MapPin, ChevronRight, Search, FileText, Clock, UserCheck, UserX } from "lucide-react";
 
 const FILTERS = ["All", "Checked In", "On OD", "Daily Report", "Absent"];
 
@@ -247,15 +247,64 @@ export function TeamScreen({ onSelectEmp }) {
 
                   <div style={{ display: "flex", gap: 12, marginTop: 6 }}>
                     <span style={{ fontSize: 11, color: TOKENS.muted }}>
-                      Tasks: <strong style={{ color: TOKENS.ink }}>{emp.tasksToday.done}/{emp.tasksToday.total}</strong>
+                      Tasks: <strong style={{ color: TOKENS.ink }}>{emp.tasksToday?.done || 0}/{emp.tasksToday?.total || 0}</strong>
                     </span>
                     <span style={{ fontSize: 11, color: TOKENS.muted }}>
-                      Streak: <strong style={{ color: TOKENS.ink }}>{emp.streak}d</strong>
+                      Streak: <strong style={{ color: TOKENS.ink }}>{emp.streak || 0}d</strong>
                     </span>
                     <span style={{ fontSize: 11, color: TOKENS.muted }}>
                       {emp.lastSeen}
                     </span>
                   </div>
+
+                  {/* Daily report details card */}
+                  {(() => {
+                    const report = (emp.reports || []).find(r => r.date === today) || emp.reports?.[0];
+                    if (!report && filter !== "Daily Report") return null;
+
+                    return (
+                      <div style={{
+                        marginTop: 10, background: "#F8FAFC", borderRadius: 10, padding: 12,
+                        border: `1px solid ${report ? `${TOKENS.gold}66` : TOKENS.border}`,
+                      }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6, flexWrap: "wrap", gap: 4 }}>
+                          <div style={{ fontSize: 11.5, fontWeight: 700, color: TOKENS.navyDeep, display: "flex", alignItems: "center", gap: 5 }}>
+                            <FileText size={13} color={TOKENS.gold} />
+                            Daily Work Report ({report?.date || today}):
+                          </div>
+                          {report ? (
+                            <div style={{
+                              background: `${TOKENS.gold}22`, border: `1px solid ${TOKENS.gold}66`,
+                              borderRadius: 10, padding: "2px 8px", fontSize: 10.5, fontWeight: 700, color: TOKENS.navyDeep,
+                              display: "flex", alignItems: "center", gap: 4,
+                            }}>
+                              <Clock size={11} color={TOKENS.navyDeep} />
+                              Time: <b>{report.timeSpent || report.hoursSpent}</b>
+                            </div>
+                          ) : (
+                            <span style={{ fontSize: 10.5, fontWeight: 700, color: TOKENS.muted }}>Pending</span>
+                          )}
+                        </div>
+
+                        {report ? (
+                          <>
+                            <div style={{ fontSize: 12, color: TOKENS.navySoft, lineHeight: 1.4, whiteSpace: "pre-wrap" }}>
+                              {report.work || report.workDescription}
+                            </div>
+                            {report.remarks && (
+                              <div style={{ marginTop: 6, paddingTop: 6, borderTop: `1px dashed ${TOKENS.border}`, fontSize: 11, color: TOKENS.muted, fontStyle: "italic" }}>
+                                <b>Remarks:</b> {report.remarks}
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <div style={{ fontSize: 11, color: TOKENS.muted, fontStyle: "italic" }}>
+                            No daily report submitted for today.
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <ChevronRight size={16} color={TOKENS.muted} style={{ flexShrink: 0 }} />
