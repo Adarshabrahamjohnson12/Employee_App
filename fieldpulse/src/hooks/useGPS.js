@@ -1,13 +1,14 @@
 import { Geolocation } from "@capacitor/geolocation";
 
-const FALLBACK = {
+const DEFAULT_FALLBACK = {
   lat: 19.0760,
   lng: 72.8777,
   accuracy: null,
   real: false,
-  city: "Mumbai (fallback)"
+  city: "Live Location"
 };
 
+// Reverse geocode lat/lng to city name
 async function fetchCityName(lat, lng) {
   try {
     const res = await fetch(
@@ -26,15 +27,38 @@ async function fetchCityName(lat, lng) {
   }
 }
 
+// IP-based Geolocation fallback if GPS permission is denied or fails
+async function fetchIpLocation() {
+  try {
+    const res = await fetch("https://ipapi.co/json/");
+    const data = await res.json();
+    if (data && data.latitude && data.longitude) {
+      return {
+        lat: +data.latitude.toFixed(6),
+        lng: +data.longitude.toFixed(6),
+        accuracy: 2500,
+        real: false,
+        city: `${data.city || data.region || "Live Location"} (IP network)`
+      };
+    }
+  } catch (e) {
+    console.warn("IP Geolocation failed:", e);
+  }
+  return DEFAULT_FALLBACK;
+}
+
 export async function captureLocation(callback) {
-  // 1. Try Capacitor Native Geolocation first if available
-  if (window.Capacitor && Geolocation) {
+  // 1. Try Capacitor Native Geolocation on mobile devices
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
     try {
-      const permission = await Geolocation.requestPermissions();
-      if (permission.location === "granted" || permission.location === "prompt") {
+      let perm = await Geolocation.checkPermissions();
+      if (perm.location !== "granted") {
+        perm = await Geolocation.requestPermissions();
+      }
+      if (perm.location === "granted") {
         const pos = await Geolocation.getCurrentPosition({
           enableHighAccuracy: true,
-          timeout: 12000,
+          timeout: 15000,
           maximumAge: 0
         });
         const lat = +pos.coords.latitude.toFixed(6);
@@ -46,7 +70,7 @@ export async function captureLocation(callback) {
         return;
       }
     } catch (err) {
-      console.warn("Capacitor Geolocation error, falling back to browser navigator:", err);
+      console.warn("Capacitor Geolocation error:", err);
     }
   }
 
@@ -61,15 +85,17 @@ export async function captureLocation(callback) {
 
         callback({ lat, lng, accuracy, real: true, city });
       },
-      (err) => {
-        console.warn("Navigator geolocation error:", err);
-        callback(FALLBACK);
+      async (err) => {
+        console.warn("Navigator geolocation error, using IP lookup fallback:", err);
+        const ipLoc = await fetchIpLocation();
+        callback(ipLoc);
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
     );
     return;
   }
 
-  // 3. Fallback if no geolocation available
-  setTimeout(() => callback(FALLBACK), 400);
+  // 3. IP Geolocation fallback
+  const ipLoc = await fetchIpLocation();
+  callback(ipLoc);
 }
