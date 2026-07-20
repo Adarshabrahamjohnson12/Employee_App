@@ -7,16 +7,18 @@ import { OverviewScreen } from "./OverviewScreen";
 import { TeamScreen } from "./TeamScreen";
 import { EmployeeDetailScreen } from "./EmployeeDetailScreen";
 import { ReimbursementApprovals } from "./ReimbursementApprovals";
+import { ManagerLeaveScreen } from "./ManagerLeaveScreen";
 import { AttendanceScreen } from "./AttendanceScreen";
 import { ManagerReportsCalendarScreen } from "./ManagerReportsCalendarScreen";
-import { BarChart3, Users, CalendarDays, Wallet, Calendar, LogOut, Clock, ChevronLeft } from "lucide-react";
+import { BarChart3, Users, CalendarDays, Wallet, Calendar, LogOut, Clock, ChevronLeft, FileText } from "lucide-react";
 
 const TABS = [
-  { id: "overview",      label: "Overview",      Icon: BarChart3 },
-  { id: "team",          label: "Team",          Icon: Users },
-  { id: "reports",       label: "Daily Reports", Icon: CalendarDays },
-  { id: "reimbursement", label: "Expenses",      Icon: Wallet },
-  { id: "attendance",    label: "Attendance",    Icon: Calendar },
+  { id: "overview",      label: "Overview",           Icon: BarChart3 },
+  { id: "team",          label: "Team",               Icon: Users },
+  { id: "reports",       label: "Daily Reports",      Icon: CalendarDays },
+  { id: "reimbursement", label: "Expenses",           Icon: Wallet },
+  { id: "leaves",        label: "Leave Applications", Icon: FileText },
+  { id: "attendance",    label: "Attendance",         Icon: Calendar },
 ];
 
 export function ManagerApp() {
@@ -107,6 +109,7 @@ export function ManagerApp() {
                 {tab === "team"          && <TeamScreen onSelectEmp={(id) => setSelectedEmpId(id)} />}
                 {tab === "reports"       && <ManagerReportsCalendarScreen />}
                 {tab === "reimbursement" && <ReimbursementApprovals />}
+                {tab === "leaves"        && <ManagerLeaveScreen />}
                 {tab === "attendance"    && <AttendanceScreen onSelectEmp={(id) => setSelectedEmpId(id)} />}
               </>
             )}
@@ -229,6 +232,7 @@ export function ManagerApp() {
                 {tab === "team"          && <TeamScreen onSelectEmp={(id) => setSelectedEmpId(id)} />}
                 {tab === "reports"       && <ManagerReportsCalendarScreen />}
                 {tab === "reimbursement" && <ReimbursementApprovals />}
+                {tab === "leaves"        && <ManagerLeaveScreen />}
                 {tab === "attendance"    && <AttendanceScreen onSelectEmp={(id) => setSelectedEmpId(id)} />}
               </>
             )}
