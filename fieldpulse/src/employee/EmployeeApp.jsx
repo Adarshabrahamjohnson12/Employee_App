@@ -28,7 +28,14 @@ export function EmployeeApp() {
   const { currentUser, employee: emp, logout } = useApp();
   const now = useClock();
   const isMobile = useIsMobile();
-  if (!emp) return null;
+  if (!emp) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, background: TOKENS.cream }}>
+        <div style={{ width: 48, height: 48, border: `4px solid ${TOKENS.goldPale}`, borderTop: `4px solid ${TOKENS.gold}`, borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+        <div style={{ fontSize: 14, color: TOKENS.navyDeep, fontWeight: 600 }}>Loading employee profile…</div>
+      </div>
+    );
+  }
 
   // ── MOBILE LAYOUT ──────────────────────────────────────────────────────────
   if (isMobile) {

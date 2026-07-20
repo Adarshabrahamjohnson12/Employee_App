@@ -57,6 +57,7 @@ function PhotoUploader({ label, value, onChange, loading, icon: Icon }) {
 }
 
 export function ProfileScreen({ emp }) {
+  if (!emp) return null;
   const { updateProfile, currentUser } = useApp();
   const isManager = currentUser?.role === "manager";
   const [uploadingField, setUploadingField] = useState(null);
@@ -67,15 +68,15 @@ export function ProfileScreen({ emp }) {
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [editForm, setEditForm] = useState({
-    fatherName: emp.fatherName || emp.father_name || "",
-    motherName: emp.motherName || emp.mother_name || "",
-    dob: emp.dob || "",
-    bloodGroup: emp.bloodGroup || emp.blood_group || "",
-    phone: emp.phone || "",
-    email: emp.email || "",
-    emergencyName: emp.emergencyContact?.name || "",
-    emergencyRelationship: emp.emergencyContact?.relationship || "",
-    emergencyPhone: emp.emergencyContact?.phone || "",
+    fatherName: emp?.fatherName || emp?.father_name || "",
+    motherName: emp?.motherName || emp?.mother_name || "",
+    dob: emp?.dob || "",
+    bloodGroup: emp?.bloodGroup || emp?.blood_group || "",
+    phone: emp?.phone || "",
+    email: emp?.email || "",
+    emergencyName: emp?.emergencyContact?.name || "",
+    emergencyRelationship: emp?.emergencyContact?.relationship || "",
+    emergencyPhone: emp?.emergencyContact?.phone || "",
   });
 
   const handleFile = (field) => async (e) => {

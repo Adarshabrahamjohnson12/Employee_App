@@ -15,6 +15,7 @@ import {
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export function DashboardScreen({ emp, goTab }) {
+  if (!emp) return null;
   const { tasks } = useApp();
   const myTasks = Array.isArray(tasks) ? tasks : [];
   const recentTasks = myTasks.slice(0, 3);
@@ -111,8 +112,8 @@ export function DashboardScreen({ emp, goTab }) {
               <span style={{ fontSize: 10, color: TOKENS.muted, fontWeight: 700, letterSpacing: 0.5 }}>TASKS TODAY</span>
             </div>
             <div style={{ fontFamily: "Fraunces, serif", fontSize: 22, fontWeight: 700, color: TOKENS.navyDeep }}>
-              {emp.tasksToday.done}
-              <span style={{ fontSize: 14, color: TOKENS.muted, fontWeight: 400 }}>/{emp.tasksToday.total}</span>
+              {emp.tasksToday?.done || 0}
+              <span style={{ fontSize: 14, color: TOKENS.muted, fontWeight: 400 }}>/{emp.tasksToday?.total || 0}</span>
             </div>
           </Card>
         </div>
