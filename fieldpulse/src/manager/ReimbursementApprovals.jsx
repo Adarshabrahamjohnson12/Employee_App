@@ -104,20 +104,33 @@ export function ReimbursementApprovals() {
                     Reason: {r.rejectReason}
                   </div>
                 )}
-                {r.receiptUrl && (
-                  <a
-                    href={getImageUrl(r.receiptUrl)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      display: "inline-flex", alignItems: "center", gap: 5, marginTop: 8,
-                      background: `${TOKENS.navyDeep}10`, border: `1px solid ${TOKENS.border}`,
-                      borderRadius: 8, padding: "4px 10px", fontSize: 11, fontWeight: 700,
-                      color: TOKENS.navyDeep, textDecoration: "none",
-                    }}
-                  >
-                    <ExternalLink size={12} /> View Receipt
-                  </a>
+                {(r.receiptUrl || r.receipt) && (
+                  <div style={{ marginTop: 10, background: TOKENS.cream, borderRadius: 10, padding: 8, border: `1px solid ${TOKENS.border}`, display: "inline-flex", alignItems: "center", gap: 10 }}>
+                    {(r.receiptUrl || r.receipt)?.match(/\.(jpg|jpeg|png|gif|webp)$/i) || (r.receiptUrl || r.receipt)?.startsWith("data:image") ? (
+                      <img
+                        src={getImageUrl(r.receiptUrl || r.receipt)}
+                        alt="Receipt"
+                        style={{ width: 44, height: 44, borderRadius: 8, objectFit: "cover", border: `1px solid ${TOKENS.border}` }}
+                      />
+                    ) : (
+                      <div style={{ width: 44, height: 44, borderRadius: 8, background: `${TOKENS.navyDeep}15`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🧾</div>
+                    )}
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: TOKENS.navyDeep }}>Bill / Receipt Attached</div>
+                      <a
+                        href={getImageUrl(r.receiptUrl || r.receipt)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        download
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: 4, marginTop: 2,
+                          fontSize: 11, fontWeight: 700, color: TOKENS.navyDeep, textDecoration: "underline"
+                        }}
+                      >
+                        <ExternalLink size={12} /> Open & Download Receipt
+                      </a>
+                    </div>
+                  </div>
                 )}
               </div>
               <div style={{ textAlign: "right" }}>

@@ -831,10 +831,17 @@ export function EmployeeDetailScreen({ empId, onBack }) {
                       {r.amount?.toLocaleString("en-IN")}
                     </div>
                     <StatusPill status={r.status} style={{ marginTop: 5, display: "inline-block" }} />
-                    {r.receiptUrl && (
-                      <a href={getImageUrl(r.receiptUrl)} target="_blank" rel="noopener noreferrer" style={{ display: "block", marginTop: 6, fontSize: 11, fontWeight: 700, color: TOKENS.navyDeep, textDecoration: "none" }}>
-                        <ExternalLink size={12} /> View Receipt
-                      </a>
+                    {(r.receiptUrl || r.receipt) && (
+                      <div style={{ marginTop: 6 }}>
+                        {(r.receiptUrl || r.receipt)?.match(/\.(jpg|jpeg|png|gif|webp)$/i) || (r.receiptUrl || r.receipt)?.startsWith("data:image") ? (
+                          <a href={getImageUrl(r.receiptUrl || r.receipt)} target="_blank" rel="noopener noreferrer" style={{ display: "block" }}>
+                            <img src={getImageUrl(r.receiptUrl || r.receipt)} alt="Receipt" style={{ width: 44, height: 44, borderRadius: 8, objectFit: "cover", border: `1px solid ${TOKENS.border}`, margin: "4px 0 2px auto" }} />
+                          </a>
+                        ) : null}
+                        <a href={getImageUrl(r.receiptUrl || r.receipt)} target="_blank" rel="noopener noreferrer" download style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 700, color: TOKENS.navyDeep, textDecoration: "none" }}>
+                          <ExternalLink size={12} /> View Receipt
+                        </a>
+                      </div>
                     )}
                   </div>
                 </div>

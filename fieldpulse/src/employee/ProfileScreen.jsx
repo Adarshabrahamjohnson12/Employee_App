@@ -6,7 +6,7 @@ import { PerformanceGauge } from "../components/PerformanceGauge";
 import { useApp } from "../context/AppContext";
 import { getImageUrl } from "../api/client";
 import { is18Plus, validatePhone, validateEmail } from "../utils/validation";
-import { Camera, Upload, Award, Zap, ListChecks, Calendar, Briefcase, Phone, Heart, Edit3, Save, X, Check, Star, TrendingUp, AlertCircle } from "lucide-react";
+import { Camera, Upload, Award, Zap, ListChecks, Calendar, Briefcase, Phone, Heart, Edit3, Save, X, Check, Star, TrendingUp, AlertCircle, Download, ExternalLink } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 
 function InfoRow({ label, value, color }) {
@@ -490,6 +490,68 @@ export function ProfileScreen({ emp }) {
         }}>
           ℹ️ Aadhaar KYC cards can only be uploaded and managed by your Manager.
         </div>
+      </Card>
+
+      {/* Additional Certificates & Manager Uploaded Documents */}
+      <SectionLabel>Certificates & Manager Documents</SectionLabel>
+      <Card style={{ padding: 14 }}>
+        {(!emp.attachments || emp.attachments.length === 0) ? (
+          <div style={{ textAlign: "center", padding: 16, color: TOKENS.muted, fontSize: 12.5 }}>
+            <Award size={28} color={TOKENS.border} style={{ margin: "0 auto 6px", display: "block" }} />
+            No additional certificates or documents uploaded yet by Manager.
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {emp.attachments.map((att, idx) => {
+              const fileUrl = getImageUrl(att.url);
+              const isImg = fileUrl?.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+              return (
+                <div key={att.id || idx} style={{
+                  background: TOKENS.cream, borderRadius: 12, padding: 12,
+                  border: `1.5px solid ${TOKENS.border}`, display: "flex",
+                  alignItems: "center", justifyContent: "space-between", gap: 10
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      width: 42, height: 42, borderRadius: 10, background: `${TOKENS.navyDeep}12`,
+                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden"
+                    }}>
+                      {isImg ? (
+                        <img src={fileUrl} alt="Certificate" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      ) : (
+                        <Award size={22} color={TOKENS.navyDeep} />
+                      )}
+                    </div>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: TOKENS.navyDeep, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {att.caption || "Official Certificate / Document"}
+                      </div>
+                      <div style={{ fontSize: 11, color: TOKENS.muted, marginTop: 2 }}>
+                        Uploaded by Manager {att.createdAt || att.created_at ? `· ${(att.createdAt || att.created_at).slice(0, 10)}` : ""}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                    <a
+                      href={fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download
+                      style={{
+                        background: TOKENS.navyDeep, color: "#fff", border: "none",
+                        borderRadius: 8, padding: "7px 12px", fontSize: 11.5, fontWeight: 700,
+                        textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 5,
+                        cursor: "pointer"
+                      }}
+                    >
+                      <Download size={13} /> View & Download
+                    </a>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </Card>
 
       <div style={{ height: 20 }} />

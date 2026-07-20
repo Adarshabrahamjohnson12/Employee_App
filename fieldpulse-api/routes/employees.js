@@ -148,7 +148,12 @@ function buildEmployee(db, emp) {
     },
     weeklyHours: wh.map(r => r.hours),
     punctualityTrend: pt.map(r => ({ day: r.day, min: r.minutes })),
-    reimbursements: reim.map(r => ({ ...r, approvedBy: r.approved_by, rejectReason: r.reject_reason })),
+    reimbursements: reim.map(r => ({
+      ...r,
+      approvedBy: r.approved_by,
+      rejectReason: r.reject_reason,
+      receiptUrl: r.receipt_path ? `/uploads/${path.basename(r.receipt_path)}` : (r.receipt_url || null),
+    })),
     odHistory: od.map(o => {
       const isCompleted = todayStr > o.to_date;
       const isActive = o.from_date <= todayStr && todayStr <= o.to_date;
