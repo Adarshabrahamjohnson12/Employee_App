@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { TOKENS } from "../tokens";
 import { Card } from "../components/Card";
 import { SectionLabel } from "../components/SectionLabel";
 import { StatusPill } from "../components/StatusPill";
 import { PerformanceGauge } from "../components/PerformanceGauge";
 import { useApp } from "../context/AppContext";
-import { getImageUrl } from "../api/client";
-import { ArrowLeft, MapPin, Phone, Heart, Briefcase, Calendar, Award, CheckCircle2, Clock, KeyRound, Eye, EyeOff, ExternalLink, Navigation, Compass } from "lucide-react";
+import { getImageUrl, api } from "../api/client";
+import { formatClientDisplayTime } from "../hooks/useClock";
+import { is18Plus, validatePhone, validateEmail } from "../utils/validation";
+import { ArrowLeft, MapPin, Phone, Heart, Briefcase, Calendar, Award, CheckCircle2, Clock, KeyRound, Eye, EyeOff, ExternalLink, Navigation, Compass, Edit3, Save, X, Upload, Camera, FileText, TrendingUp, Star } from "lucide-react";
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid
 } from "recharts";
@@ -24,12 +26,123 @@ function InfoRow({ label, value, color }) {
   );
 }
 
-const SUB_TABS = ["Profile", "GPS Location", "OD History", "Performance", "Reimbursements"];
+function AttachmentUploadBtn({ empId, onDone }) {
+  const [show, setShow] = useState(false);
+  const [caption, setCaption] = useState("");
+  const [file, setFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = async () => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("caption", caption);
+      await api.post(`/employees/${empId}/attachments`, fd, { headers: { "Content-Type": "multipart/form-data" } });
+      setShow(false); setCaption(""); setFile(null);
+      if (onDone) onDone();
+    } catch (err) { console.error("Attachment upload error:", err); }
+    finally { setUploading(false); }
+  };
+
+  return (
+    <div style={{ display: "inline-block" }}>
+      <button onClick={() => setShow(v => !v)} style={{ border: "none", background: `${TOKENS.navyDeep}12`, color: TOKENS.navyDeep, borderRadius: 12, padding: "4px 10px", fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4, cursor: "pointer" }}>
+        <Upload size={12} /> Add Attachment
+      </button>
+      {show && (
+        <div style={{ background: TOKENS.cream, borderRadius: 10, padding: 12, marginTop: 8, border: `1px solid ${TOKENS.border}` }}>
+          <input type="file" accept="image/*,application/pdf" onChange={e => setFile(e.target.files[0])} style={{ fontSize: 12, marginBottom: 8 }} />
+          <input placeholder="Caption" value={caption} onChange={e => setCaption(e.target.value)} style={{ width: "100%", padding: "7px 10px", borderRadius: 8, border: `1.5px solid ${TOKENS.border}`, fontSize: 12, color: TOKENS.ink, outline: "none", background: "#fff", marginBottom: 8 }} />
+          <button onClick={handleUpload} disabled={!file || uploading} style={{ width: "100%", background: TOKENS.navyDeep, color: "#fff", border: "none", borderRadius: 8, padding: "8px", fontWeight: 700, fontSize: 12, cursor: file && !uploading ? "pointer" : "not-allowed", opacity: file && !uploading ? 1 : 0.6 }}>
+            {uploading ? "Uploading…" : "Upload"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const SUB_TABS = ["Profile", "GPS Location", "OD History", "Performance", "Work Reports", "Reimbursements"];
 
 export function EmployeeDetailScreen({ empId, onBack }) {
-  const { getEmployee, tasks, resetEmployeePassword } = useApp();
+  const { getEmployee, tasks, resetEmployeePassword, refreshTeam, fetchLeaves, updateLeave } = useApp();
   const emp = getEmployee(empId);
   const [sub, setSub] = useState("Profile");
+  const [workReports, setWorkReports] = useState([]);
+  const [loadingReports, setLoadingReports] = useState(false);
+
+  useEffect(() => {
+    if (sub === "Work Reports" && emp) {
+      setLoadingReports(true);
+      import("../api/client").then(({ api }) =>
+        api.get("/reports", { params: { employeeId: emp.employee_id } })
+          .then(r => setWorkReports(Array.isArray(r.data) ? r.data : (r.data || [])))
+          .catch(() => setWorkReports([]))
+          .finally(() => setLoadingReports(false))
+      );
+    }
+  }, [sub, emp?.employee_id]);
+
+  // Edit profile state for Manager
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState("");
+  const [editSuccess, setEditSuccess] = useState("");
+  const [editForm, setEditForm] = useState({
+    fatherName: "",
+    motherName: "",
+    dob: "",
+    bloodGroup: "",
+    phone: "",
+    email: "",
+  });
+
+  const handleOpenEdit = () => {
+    if (!emp) return;
+    setEditForm({
+      fatherName: emp.fatherName || emp.father_name || "",
+      motherName: emp.motherName || emp.mother_name || "",
+      dob: emp.dob || "",
+      bloodGroup: emp.bloodGroup || emp.blood_group || "",
+      phone: emp.phone || "",
+      email: emp.email || "",
+    });
+    setEditError("");
+    setEditSuccess("");
+    setIsEditing(v => !v);
+  };
+
+  const handleSaveEmpDetails = async (e) => {
+    e.preventDefault();
+    setEditError(""); setEditSuccess("");
+
+    if (editForm.dob && !is18Plus(editForm.dob)) {
+      setEditError("Date of Birth must indicate age 18 or older.");
+      return;
+    }
+    if (editForm.phone && !validatePhone(editForm.phone)) {
+      setEditError("Phone number must be exactly 10 digits.");
+      return;
+    }
+    if (editForm.email && !validateEmail(editForm.email)) {
+      setEditError("Email address must be valid and end with .com (e.g. name@gmail.com).");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await api.patch(`/employees/${emp.employeeId || emp.employee_id || emp.id}`, editForm);
+      await refreshTeam();
+      setEditSuccess("Profile details saved successfully!");
+      setIsEditing(false);
+    } catch (err) {
+      setEditError(err.response?.data?.error || "Failed to update profile details.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // Reset password state
   const [showPwReset, setShowPwReset] = useState(false);
@@ -95,7 +208,7 @@ export function EmployeeDetailScreen({ empId, onBack }) {
             <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
               <StatusPill status={emp.onOD ? "od" : emp.checkedIn ? "present" : "absent"} />
               <span style={{ fontSize: 12, color: "#9FB0C9", alignSelf: "center" }}>
-                {emp.checkedIn ? emp.checkInTime : emp.lastSeen}
+                {formatClientDisplayTime(emp.checkedIn ? emp.checkInTime : (emp.checkOutTime || emp.lastSeen))}
               </span>
             </div>
           </div>
@@ -118,16 +231,92 @@ export function EmployeeDetailScreen({ empId, onBack }) {
       {/* Profile sub-tab */}
       {sub === "Profile" && (
         <div>
-          <SectionLabel>Personal Details</SectionLabel>
-          <Card style={{ padding: "0 16px" }}>
-            <InfoRow label="Full Name"     value={emp.name} />
-            <InfoRow label="Father's Name" value={emp.fatherName} />
-            <InfoRow label="Mother's Name" value={emp.motherName} />
-            <InfoRow label="Date of Birth" value={emp.dob} />
-            <InfoRow label="Blood Group"   value={emp.bloodGroup} color={TOKENS.danger} />
-            <InfoRow label="Phone"         value={emp.phone} />
-            <InfoRow label="Email"         value={emp.email} />
-          </Card>
+          {editSuccess && (
+            <div style={{ margin: "8px 0", padding: "8px 12px", background: TOKENS.successBg, border: `1px solid ${TOKENS.success}`, color: TOKENS.success, borderRadius: 8, fontSize: 12, fontWeight: 700 }}>
+              ✓ {editSuccess}
+            </div>
+          )}
+          {editError && (
+            <div style={{ margin: "8px 0", padding: "8px 12px", background: TOKENS.dangerBg, border: `1px solid ${TOKENS.danger}`, color: TOKENS.danger, borderRadius: 8, fontSize: 12, fontWeight: 700 }}>
+              ⚠️ {editError}
+            </div>
+          )}
+
+          <SectionLabel
+            right={
+              <button
+                onClick={handleOpenEdit}
+                style={{
+                  border: "none", background: isEditing ? TOKENS.dangerBg : `${TOKENS.navyDeep}12`,
+                  color: isEditing ? TOKENS.danger : TOKENS.navyDeep,
+                  borderRadius: 12, padding: "4px 10px", fontSize: 11, fontWeight: 700,
+                  display: "inline-flex", alignItems: "center", gap: 4, cursor: "pointer",
+                }}
+              >
+                {isEditing ? <><X size={12} /> Cancel</> : <><Edit3 size={12} /> Edit Details</>}
+              </button>
+            }
+          >
+            Personal Details
+          </SectionLabel>
+
+          {isEditing ? (
+            <form onSubmit={handleSaveEmpDetails}>
+              <Card style={{ padding: 16, marginBottom: 16 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: TOKENS.navyDeep, marginBottom: 12 }}>
+                  ✏️ Edit Employee Personal Details
+                </div>
+                {[
+                  { label: "Father's Name", field: "fatherName", placeholder: "Father's name" },
+                  { label: "Mother's Name", field: "motherName", placeholder: "Mother's name" },
+                  { label: "Date of Birth", field: "dob", type: "date" },
+                  { label: "Blood Group",   field: "bloodGroup", placeholder: "e.g. O+, A+, B+…" },
+                  { label: "Phone Number",  field: "phone", placeholder: "+91 9876543210", type: "tel" },
+                  { label: "Email Address", field: "email", placeholder: "name@company.com", type: "email" },
+                ].map(({ label, field, placeholder, type }) => (
+                  <div key={field} style={{ marginBottom: 10 }}>
+                    <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, display: "block", marginBottom: 4 }}>
+                      {label}
+                    </label>
+                    <input
+                      type={type || "text"}
+                      placeholder={placeholder}
+                      value={editForm[field]}
+                      onChange={e => setEditForm(f => ({ ...f, [field]: e.target.value }))}
+                      style={{
+                        width: "100%", padding: "9px 12px", borderRadius: 10,
+                        border: `1.5px solid ${TOKENS.border}`, fontSize: 13, color: TOKENS.ink,
+                        outline: "none", background: "#fff",
+                      }}
+                    />
+                  </div>
+                ))}
+                <button
+                  type="submit"
+                  disabled={saving}
+                  style={{
+                    marginTop: 14, width: "100%", background: TOKENS.navyDeep, color: "#fff",
+                    border: "none", borderRadius: 12, padding: "12px",
+                    fontWeight: 700, fontSize: 13.5, cursor: saving ? "wait" : "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                    opacity: saving ? 0.7 : 1,
+                  }}
+                >
+                  {saving ? "Saving Changes…" : <><Save size={16} /> Save Employee Details</>}
+                </button>
+              </Card>
+            </form>
+          ) : (
+            <Card style={{ padding: "0 16px" }}>
+              <InfoRow label="Full Name"     value={emp.name} />
+              <InfoRow label="Father's Name" value={emp.fatherName || emp.father_name} />
+              <InfoRow label="Mother's Name" value={emp.motherName || emp.mother_name} />
+              <InfoRow label="Date of Birth" value={emp.dob} />
+              <InfoRow label="Blood Group"   value={emp.bloodGroup || emp.blood_group} color={TOKENS.danger} />
+              <InfoRow label="Phone"         value={emp.phone} />
+              <InfoRow label="Email"         value={emp.email} />
+            </Card>
+          )}
 
           <SectionLabel>Emergency Contact</SectionLabel>
           <Card style={{ padding: "0 16px" }}>
@@ -138,10 +327,10 @@ export function EmployeeDetailScreen({ empId, onBack }) {
 
           <SectionLabel>Job Details</SectionLabel>
           <Card style={{ padding: "0 16px" }}>
-            <InfoRow label="Employee ID" value={emp.employeeId} />
-            <InfoRow label="Client"      value={emp.clientName} />
-            <InfoRow label="Team"        value={emp.teamName} />
-            <InfoRow label="Joined"      value={emp.joiningDate} />
+            <InfoRow label="Employee ID" value={emp.employeeId || emp.employee_id} />
+            <InfoRow label="Client"      value={emp.clientName || emp.client_name} />
+            <InfoRow label="Team"        value={emp.teamName || emp.team_name} />
+            <InfoRow label="Joined"      value={emp.joiningDate || emp.joining_date} />
           </Card>
 
           {/* Aadhaar KYC */}
@@ -168,6 +357,30 @@ export function EmployeeDetailScreen({ empId, onBack }) {
               ))}
             </div>
           </Card>
+
+          {/* Attachments section */}
+          <SectionLabel right={
+            <AttachmentUploadBtn empId={emp.employee_id || emp.id} onDone={refreshTeam} />
+          }>Attachments</SectionLabel>
+          {(emp.attachments || []).length === 0 && (
+            <Card style={{ textAlign: "center", color: TOKENS.muted, fontSize: 12, padding: 16 }}>No attachments yet.</Card>
+          )}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {(emp.attachments || []).map(att => (
+              <Card key={att.id} style={{ padding: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <img src={getImageUrl(att.url)} alt="attachment" style={{ width: 54, height: 54, objectFit: "cover", borderRadius: 8, border: `1px solid ${TOKENS.border}` }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: TOKENS.ink }}>{att.caption || "Attachment"}</div>
+                    <div style={{ fontSize: 11, color: TOKENS.muted }}>{att.created_at?.slice(0, 10)}</div>
+                  </div>
+                  <a href={getImageUrl(att.url)} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: TOKENS.navyDeep, display: "flex", alignItems: "center", gap: 4, textDecoration: "none", fontWeight: 700 }}>
+                    <ExternalLink size={12} /> View
+                  </a>
+                </div>
+              </Card>
+            ))}
+          </div>
 
           {/* Reset Password */}
           <SectionLabel>Login Access</SectionLabel>
@@ -260,7 +473,7 @@ export function EmployeeDetailScreen({ empId, onBack }) {
                 </div>
                 <div style={{ fontSize: 12, color: TOKENS.muted, marginTop: 4 }}>
                   Status: <strong style={{ color: emp.checkedIn ? TOKENS.success : TOKENS.danger }}>
-                    {emp.checkedIn ? `Checked In (${emp.checkInTime || emp.lastSeen})` : emp.onOD ? `On OD (${emp.odCity})` : `Not Checked In (Last seen ${emp.lastSeen})`}
+                    {emp.checkedIn ? `Checked In (${formatClientDisplayTime(emp.checkInTime || emp.lastSeen)})` : emp.onOD ? `On OD (${emp.odCity})` : `Not Checked In (Last seen ${formatClientDisplayTime(emp.lastSeen)})`}
                   </strong>
                 </div>
               </div>
@@ -342,7 +555,7 @@ export function EmployeeDetailScreen({ empId, onBack }) {
                         {c.type === "in" ? "Check In" : "Check Out"} · {c.city || "Live GPS"}
                       </div>
                       <div style={{ fontSize: 11, color: TOKENS.muted, marginTop: 2 }}>
-                        {c.timestamp || c.date} {c.lat ? `· ${c.lat.toFixed(4)}, ${c.lng.toFixed(4)}` : ""}
+                        {formatClientDisplayTime(c.timestamp || c.date)} {c.lat ? `· ${c.lat.toFixed(4)}, ${c.lng.toFixed(4)}` : ""}
                       </div>
                     </div>
                   </div>
@@ -376,28 +589,42 @@ export function EmployeeDetailScreen({ empId, onBack }) {
             <Card style={{ textAlign: "center", color: TOKENS.muted, fontSize: 13, padding: 20 }}>No OD trips yet.</Card>
           )}
           <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 4 }}>
-            {(emp.odHistory || []).map((od) => (
-              <Card key={od.id} style={{ padding: 14 }}>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: 14 }}>📍 {od.city}</div>
-                    <div style={{ fontSize: 12, color: TOKENS.muted, marginTop: 2 }}>
-                      {od.client} · {od.from} → {od.to}
+            {(emp.odHistory || []).map((od) => {
+              const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+              const isCompleted = od.isCompleted || (od.to && todayStr > od.to);
+              const statusKey = od.statusKey || (isCompleted ? "od-completed" : od.arrived ? "arrived" : "od-active");
+
+              return (
+                <Card key={od.id} style={{ padding: 14 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 14 }}>📍 {od.city}</div>
+                      <div style={{ fontSize: 12, color: TOKENS.muted, marginTop: 2 }}>
+                        {od.client} · {od.from} → {od.to}
+                      </div>
                     </div>
+                    <StatusPill status={statusKey} />
                   </div>
-                  <StatusPill status={od.arrived ? "arrived" : "not-arrived"} />
-                </div>
-                {od.arrived && (
-                  <div style={{
-                    marginTop: 8, display: "flex", alignItems: "center", gap: 6,
-                    background: TOKENS.successBg, borderRadius: 8, padding: "6px 10px",
-                    fontSize: 12, color: TOKENS.success, fontWeight: 600,
-                  }}>
-                    <CheckCircle2 size={13} /> {od.arrivalLocation} · {od.arrivalTime}
-                  </div>
-                )}
-              </Card>
-            ))}
+                  {isCompleted ? (
+                    <div style={{
+                      marginTop: 8, display: "flex", alignItems: "center", gap: 6,
+                      background: TOKENS.successBg, borderRadius: 8, padding: "6px 10px",
+                      fontSize: 12, color: TOKENS.success, fontWeight: 600,
+                    }}>
+                      <CheckCircle2 size={13} /> OD Completed on {od.to} ✓
+                    </div>
+                  ) : od.arrived ? (
+                    <div style={{
+                      marginTop: 8, display: "flex", alignItems: "center", gap: 6,
+                      background: TOKENS.successBg, borderRadius: 8, padding: "6px 10px",
+                      fontSize: 12, color: TOKENS.success, fontWeight: 600,
+                    }}>
+                      <CheckCircle2 size={13} /> {od.arrivalLocation} · {formatClientDisplayTime(od.arrivalTime)}
+                    </div>
+                  ) : null}
+                </Card>
+              );
+            })}
           </div>
         </div>
       )}
@@ -405,7 +632,44 @@ export function EmployeeDetailScreen({ empId, onBack }) {
       {/* Performance sub-tab */}
       {sub === "Performance" && (
         <div>
-          <SectionLabel>Punctuality trend</SectionLabel>
+          {/* Performance Index Banner */}
+          <Card style={{ background: `linear-gradient(135deg, ${TOKENS.navyDeep}, ${TOKENS.navySoft})`, padding: 18, marginBottom: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#9FB0C9", letterSpacing: 0.5 }}>PERFORMANCE INDEX</div>
+                <div style={{ fontFamily: "Fraunces, serif", fontSize: 36, fontWeight: 700, color: TOKENS.gold, lineHeight: 1.1 }}>
+                  {emp.performanceIndex ?? emp.score ?? "—"}%
+                </div>
+                <div style={{ fontSize: 12, color: "#9FB0C9", marginTop: 4 }}>Based on hours · tasks · reports · OD</div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                {(emp.performanceIndex ?? emp.score ?? 0) >= 90 ? (
+                  <div style={{ background: TOKENS.successBg, border: `1px solid ${TOKENS.success}`, borderRadius: 12, padding: "6px 12px", fontSize: 11, fontWeight: 700, color: TOKENS.success, display: "flex", alignItems: "center", gap: 6 }}>
+                    <Star size={13} /> Benefits Eligible
+                  </div>
+                ) : (
+                  <div style={{ background: `${TOKENS.danger}20`, border: `1px solid ${TOKENS.danger}44`, borderRadius: 12, padding: "6px 12px", fontSize: 11, fontWeight: 700, color: TOKENS.danger }}>
+                    Below 90% threshold
+                  </div>
+                )}
+              </div>
+            </div>
+            {/* Factor breakdown */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 14 }}>
+              {[
+                { label: "Hours (9hr/day)", icon: "⏱️" },
+                { label: "Tasks Done", icon: "✅" },
+                { label: "Daily Reports", icon: "📋" },
+                { label: "OD Coverage", icon: "✈️" },
+              ].map(({ label, icon }) => (
+                <div key={label} style={{ background: "rgba(255,255,255,0.08)", borderRadius: 10, padding: "8px 12px" }}>
+                  <div style={{ fontSize: 12 }}>{icon}</div>
+                  <div style={{ fontSize: 10.5, color: "#9FB0C9", marginTop: 3 }}>{label}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginTop: 2 }}>25% weight</div>
+                </div>
+              ))}
+            </div>
+          </Card>
           <Card style={{ padding: "16px 8px 8px" }}>
             <ResponsiveContainer width="100%" height={120}>
               <LineChart data={emp.punctualityTrend || []}>
@@ -464,7 +728,7 @@ export function EmployeeDetailScreen({ empId, onBack }) {
                       </div>
                       {t.completion_lat && (
                         <div style={{ fontSize: 10.5, color: TOKENS.muted }}>
-                          📍 GPS Verified: Lat {t.completion_lat.toFixed(5)}, Lng {t.completion_lng.toFixed(5)} · Completed: {t.completed_at || t.time}
+                          📍 GPS Verified: Lat {t.completion_lat.toFixed(5)}, Lng {t.completion_lng.toFixed(5)} · Completed: {formatClientDisplayTime(t.completed_at || t.time)}
                         </div>
                       )}
                     </div>
@@ -473,6 +737,38 @@ export function EmployeeDetailScreen({ empId, onBack }) {
               ))
             )}
           </Card>
+        </div>
+      )}
+
+      {/* Work Reports sub-tab */}
+      {sub === "Work Reports" && (
+        <div>
+          <SectionLabel>Daily Work Reports</SectionLabel>
+          {loadingReports && <Card style={{ textAlign: "center", color: TOKENS.muted, fontSize: 13, padding: 20 }}>Loading reports…</Card>}
+          {!loadingReports && workReports.length === 0 && (
+            <Card style={{ textAlign: "center", color: TOKENS.muted, fontSize: 13, padding: 20 }}>
+              <FileText size={28} color={TOKENS.border} style={{ margin: "0 auto 8px" }} />
+              No work reports submitted yet.
+            </Card>
+          )}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {workReports.map((r, idx) => (
+              <Card key={r.id || idx} style={{ padding: 14, borderLeft: `4px solid ${TOKENS.gold}` }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: TOKENS.navyDeep }}>{r.date}</div>
+                  <div style={{ background: `${TOKENS.gold}20`, border: `1px solid ${TOKENS.gold}55`, borderRadius: 8, padding: "2px 8px", fontSize: 11, fontWeight: 700, color: TOKENS.navyDeep, display: "flex", alignItems: "center", gap: 4 }}>
+                    <Clock size={11} /> {r.timeSpent || r.time_spent}
+                  </div>
+                </div>
+                <div style={{ fontSize: 13, color: TOKENS.ink, lineHeight: 1.5, whiteSpace: "pre-wrap" }}>{r.work}</div>
+                {r.remarks && (
+                  <div style={{ fontSize: 11, color: TOKENS.muted, fontStyle: "italic", marginTop: 8, borderTop: `1px dashed ${TOKENS.border}`, paddingTop: 6 }}>
+                    Remarks: {r.remarks}
+                  </div>
+                )}
+              </Card>
+            ))}
+          </div>
         </div>
       )}
 
@@ -496,9 +792,14 @@ export function EmployeeDetailScreen({ empId, onBack }) {
                   </div>
                   <div style={{ textAlign: "right" }}>
                     <div style={{ fontFamily: "Fraunces, serif", fontSize: 16, fontWeight: 700, color: TOKENS.navyDeep }}>
-                      ₹{r.amount.toLocaleString("en-IN")}
+                      {r.amount?.toLocaleString("en-IN")}
                     </div>
                     <StatusPill status={r.status} style={{ marginTop: 5, display: "inline-block" }} />
+                    {r.receiptUrl && (
+                      <a href={getImageUrl(r.receiptUrl)} target="_blank" rel="noopener noreferrer" style={{ display: "block", marginTop: 6, fontSize: 11, fontWeight: 700, color: TOKENS.navyDeep, textDecoration: "none" }}>
+                        <ExternalLink size={12} /> View Receipt
+                      </a>
+                    )}
                   </div>
                 </div>
               </Card>

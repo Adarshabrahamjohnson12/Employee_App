@@ -16,13 +16,13 @@ router.get("/", auth, async (req, res) => {
 router.post("/", auth, async (req, res) => {
   try {
     if (req.user.role !== "manager") return res.status(403).json({ error: "Manager only" });
-    const { employeeId, title, category, location, clientRef } = req.body;
+    const { employeeId, title, category, location, clientRef, clientName, projectName } = req.body;
     if (!employeeId || !title) return res.status(400).json({ error: "employeeId and title required" });
 
     const db = await getDb();
     const taskId = `t-${Date.now()}`;
-    run(db, `INSERT INTO tasks (id, employee_id, title, category, location, distance, status, client_ref) VALUES (?,?,?,?,?,?,?,?)`,
-      [taskId, employeeId, title, category || "general", location || "On-site", "0.0 km", "pending", clientRef || `REF-${Date.now().toString().slice(-4)}`]);
+    run(db, `INSERT INTO tasks (id, employee_id, title, category, location, distance, status, client_ref, client_name, project_name) VALUES (?,?,?,?,?,?,?,?,?,?)`,
+      [taskId, employeeId, title, category || "general", location || "On-site", "0.0 km", "pending", clientRef || `REF-${Date.now().toString().slice(-4)}`, clientName || null, projectName || null]);
 
     res.json({ message: "Task assigned successfully", taskId });
   } catch (err) { console.error(err); res.status(500).json({ error: "Server error" }); }

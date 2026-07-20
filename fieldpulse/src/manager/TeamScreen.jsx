@@ -5,6 +5,7 @@ import { SectionLabel } from "../components/SectionLabel";
 import { StatusPill } from "../components/StatusPill";
 import { useApp } from "../context/AppContext";
 import { getImageUrl } from "../api/client";
+import { is18Plus, validatePhone, validateEmail } from "../utils/validation";
 import { MapPin, ChevronRight, Search, FileText, Clock, UserCheck, UserX } from "lucide-react";
 
 const FILTERS = ["All", "Checked In", "On OD", "Daily Report", "Absent"];
@@ -21,6 +22,8 @@ export function TeamScreen({ onSelectEmp }) {
   const [taskCategory, setTaskCategory] = useState("Calibration");
   const [taskLocation, setTaskLocation] = useState("");
   const [clientRef, setClientRef] = useState("");
+  const [taskClientName, setTaskClientName] = useState("");
+  const [taskProjectName, setTaskProjectName] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -29,6 +32,15 @@ export function TeamScreen({ onSelectEmp }) {
   const [newEmpId, setNewEmpId] = useState("");
   const [newName, setNewName] = useState("");
   const [newRole, setNewRole] = useState("Field Agent");
+  const [newFatherName, setNewFatherName] = useState("");
+  const [newMotherName, setNewMotherName] = useState("");
+  const [newDob, setNewDob] = useState("");
+  const [newBloodGroup, setNewBloodGroup] = useState("B+");
+  const [newPhone, setNewPhone] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [newEmergencyName, setNewEmergencyName] = useState("");
+  const [newEmergencyRelationship, setNewEmergencyRelationship] = useState("Father");
+  const [newEmergencyPhone, setNewEmergencyPhone] = useState("");
   const [newClient, setNewClient] = useState("GoldPE Client");
   const [newTeam, setNewTeam] = useState("Western Region");
   const [newJoiningDate, setNewJoiningDate] = useState(new Date().toISOString().slice(0, 10));
@@ -41,6 +53,15 @@ export function TeamScreen({ onSelectEmp }) {
     setNewEmpId(`FP-WR-00${team.length + 1}`);
     setNewName("");
     setNewRole("Field Agent");
+    setNewFatherName("");
+    setNewMotherName("");
+    setNewDob("");
+    setNewBloodGroup("B+");
+    setNewPhone("");
+    setNewEmail("");
+    setNewEmergencyName("");
+    setNewEmergencyRelationship("Father");
+    setNewEmergencyPhone("");
     setNewClient("GoldPE Client");
     setNewTeam("Western Region");
     setNewJoiningDate(new Date().toISOString().slice(0, 10));
@@ -54,6 +75,19 @@ export function TeamScreen({ onSelectEmp }) {
       setErrorAdd("Employee ID, Name, Role, and Password are required.");
       return;
     }
+    if (newDob && !is18Plus(newDob)) {
+      setErrorAdd("Date of Birth must indicate age 18 or older.");
+      return;
+    }
+    if (newPhone && !validatePhone(newPhone)) {
+      setErrorAdd("Phone number must be exactly 10 digits.");
+      return;
+    }
+    if (newEmail && !validateEmail(newEmail)) {
+      setErrorAdd("Email address must be valid and end with .com (e.g. name@gmail.com).");
+      return;
+    }
+
     setErrorAdd("");
     setLoadingAdd(true);
     try {
@@ -61,6 +95,15 @@ export function TeamScreen({ onSelectEmp }) {
         employeeId: newEmpId.trim(),
         name: newName.trim(),
         role: newRole.trim(),
+        fatherName: newFatherName.trim(),
+        motherName: newMotherName.trim(),
+        dob: newDob,
+        bloodGroup: newBloodGroup,
+        phone: newPhone.trim(),
+        email: newEmail.trim(),
+        emergencyName: newEmergencyName.trim(),
+        emergencyRelationship: newEmergencyRelationship.trim(),
+        emergencyPhone: newEmergencyPhone.trim(),
         clientName: newClient.trim(),
         teamName: newTeam.trim(),
         joiningDate: newJoiningDate,
@@ -80,6 +123,8 @@ export function TeamScreen({ onSelectEmp }) {
     setTaskTitle("");
     setTaskCategory("Calibration");
     setTaskLocation("");
+    setTaskClientName("");
+    setTaskProjectName("");
     setClientRef(`REF-${Date.now().toString().slice(-4)}`);
     setErrorMsg("");
   };
@@ -98,7 +143,9 @@ export function TeamScreen({ onSelectEmp }) {
         title: taskTitle.trim(),
         category: taskCategory,
         location: taskLocation.trim(),
-        clientRef: clientRef.trim()
+        clientRef: clientRef.trim(),
+        clientName: taskClientName.trim(),
+        projectName: taskProjectName.trim(),
       });
       setIsAssignOpen(false);
     } catch (err) {
@@ -444,6 +491,25 @@ export function TeamScreen({ onSelectEmp }) {
               }}
             />
 
+            {/* Client Name */}
+            <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
+              CLIENT NAME / PROJECT
+            </label>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+              <input
+                placeholder="Client name"
+                value={taskClientName}
+                onChange={(e) => setTaskClientName(e.target.value)}
+                style={{ padding: "10px 12px", borderRadius: 10, border: `1.5px solid ${TOKENS.border}`, fontSize: 13, background: TOKENS.cream, outline: "none", color: TOKENS.ink }}
+              />
+              <input
+                placeholder="Project name"
+                value={taskProjectName}
+                onChange={(e) => setTaskProjectName(e.target.value)}
+                style={{ padding: "10px 12px", borderRadius: 10, border: `1.5px solid ${TOKENS.border}`, fontSize: 13, background: TOKENS.cream, outline: "none", color: TOKENS.ink }}
+              />
+            </div>
+
             {errorMsg && (
               <div style={{ color: TOKENS.danger, fontSize: 12, fontWeight: 600, marginBottom: 14 }}>
                 ⚠️ {errorMsg}
@@ -489,134 +555,314 @@ export function TeamScreen({ onSelectEmp }) {
         }}>
           <form onSubmit={handleAddEmployee} style={{
             background: "#fff", borderRadius: 20,
-            width: "100%", maxWidth: 440, padding: 24,
+            width: "100%", maxWidth: 480, maxHeight: "90vh", display: "flex", flexDirection: "column",
             boxShadow: "0 24px 60px rgba(10,25,50,0.22)",
-            border: `1.5px solid ${TOKENS.border}`,
+            border: `1.5px solid ${TOKENS.border}`, overflow: "hidden",
           }} className="screen-enter">
-            <h3 style={{ fontFamily: "Fraunces, serif", fontSize: 18, fontWeight: 700, color: TOKENS.navyDeep, margin: "0 0 16px" }}>
-              Add New Employee Profile
-            </h3>
+            <div style={{ padding: "20px 24px 14px", borderBottom: `1px solid ${TOKENS.border}` }}>
+              <h3 style={{ fontFamily: "Fraunces, serif", fontSize: 18, fontWeight: 700, color: TOKENS.navyDeep, margin: 0 }}>
+                Add New Employee Profile
+              </h3>
+              <p style={{ fontSize: 11.5, color: TOKENS.muted, margin: "4px 0 0" }}>
+                Fill out the employee's login credentials, personal info, and emergency contact.
+              </p>
+            </div>
 
-            {/* Employee ID */}
-            <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
-              EMPLOYEE ID / USERNAME
-            </label>
-            <input
-              placeholder="e.g. FP-WR-005"
-              value={newEmpId}
-              onChange={(e) => setNewEmpId(e.target.value)}
-              style={{
-                width: "100%", padding: "10px 12px", borderRadius: 10,
-                border: `1.5px solid ${TOKENS.border}`, fontSize: 13.5,
-                background: TOKENS.cream, outline: "none", color: TOKENS.ink,
-                marginBottom: 16,
-              }}
-            />
-
-            {/* Full Name */}
-            <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
-              FULL NAME
-            </label>
-            <input
-              placeholder="e.g. Arjun Mehta"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              style={{
-                width: "100%", padding: "10px 12px", borderRadius: 10,
-                border: `1.5px solid ${TOKENS.border}`, fontSize: 13.5,
-                background: TOKENS.cream, outline: "none", color: TOKENS.ink,
-                marginBottom: 16,
-              }}
-            />
-
-            {/* Role */}
-            <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
-              JOB ROLE / DESIGNATION
-            </label>
-            <input
-              placeholder="e.g. Field Agent"
-              value={newRole}
-              onChange={(e) => setNewRole(e.target.value)}
-              style={{
-                width: "100%", padding: "10px 12px", borderRadius: 10,
-                border: `1.5px solid ${TOKENS.border}`, fontSize: 13.5,
-                background: TOKENS.cream, outline: "none", color: TOKENS.ink,
-                marginBottom: 16,
-              }}
-            />
-
-            {/* Client Name */}
-            <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
-              CLIENT PARTNER
-            </label>
-            <input
-              placeholder="e.g. GoldPE Client"
-              value={newClient}
-              onChange={(e) => setNewClient(e.target.value)}
-              style={{
-                width: "100%", padding: "10px 12px", borderRadius: 10,
-                border: `1.5px solid ${TOKENS.border}`, fontSize: 13.5,
-                background: TOKENS.cream, outline: "none", color: TOKENS.ink,
-                marginBottom: 16,
-              }}
-            />
-
-            {/* Team Name */}
-            <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
-              ASSIGNED TEAM
-            </label>
-            <input
-              placeholder="e.g. Western Region"
-              value={newTeam}
-              onChange={(e) => setNewTeam(e.target.value)}
-              style={{
-                width: "100%", padding: "10px 12px", borderRadius: 10,
-                border: `1.5px solid ${TOKENS.border}`, fontSize: 13.5,
-                background: TOKENS.cream, outline: "none", color: TOKENS.ink,
-                marginBottom: 16,
-              }}
-            />
-
-            {/* Joining Date */}
-            <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
-              JOINING DATE
-            </label>
-            <input
-              type="date"
-              value={newJoiningDate}
-              onChange={(e) => setNewJoiningDate(e.target.value)}
-              style={{
-                width: "100%", padding: "10px 12px", borderRadius: 10,
-                border: `1.5px solid ${TOKENS.border}`, fontSize: 13.5,
-                background: TOKENS.cream, outline: "none", color: TOKENS.ink,
-                marginBottom: 16,
-              }}
-            />
-
-            {/* Password */}
-            <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
-              PASSWORD (SET BY MANAGER)
-            </label>
-            <input
-              type="password"
-              placeholder="e.g. arjun123"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              style={{
-                width: "100%", padding: "10px 12px", borderRadius: 10,
-                border: `1.5px solid ${TOKENS.border}`, fontSize: 13.5,
-                background: TOKENS.cream, outline: "none", color: TOKENS.ink,
-                marginBottom: 16,
-              }}
-            />
-
-            {errorAdd && (
-              <div style={{ color: TOKENS.danger, fontSize: 12, fontWeight: 600, marginBottom: 14 }}>
-                ⚠️ {errorAdd}
+            <div style={{ padding: 24, overflowY: "auto", flex: 1 }}>
+              {/* SECTION 1: Credentials & Job */}
+              <div style={{ fontSize: 12, fontWeight: 700, color: TOKENS.gold, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 12 }}>
+                👤 Basic & Login Credentials
               </div>
-            )}
 
-            <div style={{ display: "flex", gap: 10 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 4 }}>
+                    EMPLOYEE ID / USERNAME *
+                  </label>
+                  <input
+                    placeholder="e.g. FP-WR-005"
+                    value={newEmpId}
+                    onChange={(e) => setNewEmpId(e.target.value)}
+                    style={{
+                      width: "100%", padding: "9px 11px", borderRadius: 10,
+                      border: `1.5px solid ${TOKENS.border}`, fontSize: 13,
+                      background: TOKENS.cream, outline: "none", color: TOKENS.ink, marginBottom: 12,
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 4 }}>
+                    PASSWORD *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. agent123"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    style={{
+                      width: "100%", padding: "9px 11px", borderRadius: 10,
+                      border: `1.5px solid ${TOKENS.border}`, fontSize: 13,
+                      background: TOKENS.cream, outline: "none", color: TOKENS.ink, marginBottom: 12,
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 4 }}>
+                    FULL NAME *
+                  </label>
+                  <input
+                    placeholder="e.g. Arjun Mehta"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    style={{
+                      width: "100%", padding: "9px 11px", borderRadius: 10,
+                      border: `1.5px solid ${TOKENS.border}`, fontSize: 13,
+                      background: TOKENS.cream, outline: "none", color: TOKENS.ink, marginBottom: 12,
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 4 }}>
+                    JOB ROLE / DESIGNATION *
+                  </label>
+                  <input
+                    placeholder="e.g. Field Agent"
+                    value={newRole}
+                    onChange={(e) => setNewRole(e.target.value)}
+                    style={{
+                      width: "100%", padding: "9px 11px", borderRadius: 10,
+                      border: `1.5px solid ${TOKENS.border}`, fontSize: 13,
+                      background: TOKENS.cream, outline: "none", color: TOKENS.ink, marginBottom: 12,
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* SECTION 2: Personal Details */}
+              <div style={{ fontSize: 12, fontWeight: 700, color: TOKENS.gold, textTransform: "uppercase", letterSpacing: 0.5, margin: "12px 0 12px" }}>
+                📋 Personal Details
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 4 }}>
+                    FATHER'S NAME
+                  </label>
+                  <input
+                    placeholder="Father's name"
+                    value={newFatherName}
+                    onChange={(e) => setNewFatherName(e.target.value)}
+                    style={{
+                      width: "100%", padding: "9px 11px", borderRadius: 10,
+                      border: `1.5px solid ${TOKENS.border}`, fontSize: 13,
+                      background: TOKENS.cream, outline: "none", color: TOKENS.ink, marginBottom: 12,
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 4 }}>
+                    MOTHER'S NAME
+                  </label>
+                  <input
+                    placeholder="Mother's name"
+                    value={newMotherName}
+                    onChange={(e) => setNewMotherName(e.target.value)}
+                    style={{
+                      width: "100%", padding: "9px 11px", borderRadius: 10,
+                      border: `1.5px solid ${TOKENS.border}`, fontSize: 13,
+                      background: TOKENS.cream, outline: "none", color: TOKENS.ink, marginBottom: 12,
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 4 }}>
+                    DATE OF BIRTH
+                  </label>
+                  <input
+                    type="date"
+                    value={newDob}
+                    onChange={(e) => setNewDob(e.target.value)}
+                    style={{
+                      width: "100%", padding: "9px 11px", borderRadius: 10,
+                      border: `1.5px solid ${TOKENS.border}`, fontSize: 13,
+                      background: TOKENS.cream, outline: "none", color: TOKENS.ink, marginBottom: 12,
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 4 }}>
+                    BLOOD GROUP
+                  </label>
+                  <select
+                    value={newBloodGroup}
+                    onChange={(e) => setNewBloodGroup(e.target.value)}
+                    style={{
+                      width: "100%", padding: "9px 11px", borderRadius: 10,
+                      border: `1.5px solid ${TOKENS.border}`, fontSize: 13,
+                      background: TOKENS.cream, outline: "none", color: TOKENS.ink, marginBottom: 12,
+                    }}
+                  >
+                    {["A+", "B+", "O+", "AB+", "A-", "B-", "O-", "AB-"].map(bg => (
+                      <option key={bg} value={bg}>{bg}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 4 }}>
+                    PHONE NUMBER
+                  </label>
+                  <input
+                    placeholder="+91 98765 43210"
+                    value={newPhone}
+                    onChange={(e) => setNewPhone(e.target.value)}
+                    style={{
+                      width: "100%", padding: "9px 11px", borderRadius: 10,
+                      border: `1.5px solid ${TOKENS.border}`, fontSize: 13,
+                      background: TOKENS.cream, outline: "none", color: TOKENS.ink, marginBottom: 12,
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 4 }}>
+                    EMAIL ADDRESS
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="agent@goldpe.in"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    style={{
+                      width: "100%", padding: "9px 11px", borderRadius: 10,
+                      border: `1.5px solid ${TOKENS.border}`, fontSize: 13,
+                      background: TOKENS.cream, outline: "none", color: TOKENS.ink, marginBottom: 12,
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* SECTION 3: Emergency Contact */}
+              <div style={{ fontSize: 12, fontWeight: 700, color: TOKENS.gold, textTransform: "uppercase", letterSpacing: 0.5, margin: "12px 0 12px" }}>
+                🚨 Emergency Contact
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                <div>
+                  <label style={{ fontSize: 10.5, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.4, display: "block", marginBottom: 4 }}>
+                    CONTACT NAME
+                  </label>
+                  <input
+                    placeholder="Full Name"
+                    value={newEmergencyName}
+                    onChange={(e) => setNewEmergencyName(e.target.value)}
+                    style={{
+                      width: "100%", padding: "9px 8px", borderRadius: 10,
+                      border: `1.5px solid ${TOKENS.border}`, fontSize: 12.5,
+                      background: TOKENS.cream, outline: "none", color: TOKENS.ink, marginBottom: 12,
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 10.5, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.4, display: "block", marginBottom: 4 }}>
+                    RELATION
+                  </label>
+                  <input
+                    placeholder="e.g. Father"
+                    value={newEmergencyRelationship}
+                    onChange={(e) => setNewEmergencyRelationship(e.target.value)}
+                    style={{
+                      width: "100%", padding: "9px 8px", borderRadius: 10,
+                      border: `1.5px solid ${TOKENS.border}`, fontSize: 12.5,
+                      background: TOKENS.cream, outline: "none", color: TOKENS.ink, marginBottom: 12,
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 10.5, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.4, display: "block", marginBottom: 4 }}>
+                    PHONE
+                  </label>
+                  <input
+                    placeholder="Contact Phone"
+                    value={newEmergencyPhone}
+                    onChange={(e) => setNewEmergencyPhone(e.target.value)}
+                    style={{
+                      width: "100%", padding: "9px 8px", borderRadius: 10,
+                      border: `1.5px solid ${TOKENS.border}`, fontSize: 12.5,
+                      background: TOKENS.cream, outline: "none", color: TOKENS.ink, marginBottom: 12,
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* SECTION 4: Organization Details */}
+              <div style={{ fontSize: 12, fontWeight: 700, color: TOKENS.gold, textTransform: "uppercase", letterSpacing: 0.5, margin: "12px 0 12px" }}>
+                🏢 Organization Details
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                <div>
+                  <label style={{ fontSize: 10.5, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.4, display: "block", marginBottom: 4 }}>
+                    EMAIL
+                  </label>
+                  <input
+                    placeholder="agent@goldpe.in"
+                    value={newClient}
+                    onChange={(e) => setNewClient(e.target.value)}
+                    style={{
+                      width: "100%", padding: "9px 8px", borderRadius: 10,
+                      border: `1.5px solid ${TOKENS.border}`, fontSize: 12.5,
+                      background: TOKENS.cream, outline: "none", color: TOKENS.ink, marginBottom: 12,
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 10.5, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.4, display: "block", marginBottom: 4 }}>
+                    ASSIGNED TEAM
+                  </label>
+                  <input
+                    placeholder="Western Region"
+                    value={newTeam}
+                    onChange={(e) => setNewTeam(e.target.value)}
+                    style={{
+                      width: "100%", padding: "9px 8px", borderRadius: 10,
+                      border: `1.5px solid ${TOKENS.border}`, fontSize: 12.5,
+                      background: TOKENS.cream, outline: "none", color: TOKENS.ink, marginBottom: 12,
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 10.5, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.4, display: "block", marginBottom: 4 }}>
+                    JOINING DATE
+                  </label>
+                  <input
+                    type="date"
+                    value={newJoiningDate}
+                    onChange={(e) => setNewJoiningDate(e.target.value)}
+                    style={{
+                      width: "100%", padding: "9px 8px", borderRadius: 10,
+                      border: `1.5px solid ${TOKENS.border}`, fontSize: 12.5,
+                      background: TOKENS.cream, outline: "none", color: TOKENS.ink, marginBottom: 12,
+                    }}
+                  />
+                </div>
+              </div>
+
+              {errorAdd && (
+                <div style={{ color: TOKENS.danger, fontSize: 12, fontWeight: 600, marginTop: 8 }}>
+                  ⚠️ {errorAdd}
+                </div>
+              )}
+            </div>
+
+            <div style={{ padding: "14px 24px", borderTop: `1px solid ${TOKENS.border}`, display: "flex", gap: 10, background: "#FAFBFD" }}>
               <button
                 type="button"
                 onClick={() => setIsAddEmpOpen(false)}

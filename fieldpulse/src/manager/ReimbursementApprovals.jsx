@@ -4,7 +4,8 @@ import { Card } from "../components/Card";
 import { SectionLabel } from "../components/SectionLabel";
 import { StatusPill } from "../components/StatusPill";
 import { useApp } from "../context/AppContext";
-import { CheckCircle2, XCircle, Clock, X } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, X, ExternalLink } from "lucide-react";
+import { getImageUrl } from "../api/client";
 
 const CATEGORY_EMOJI = { Travel: "🚌", Food: "🍽️", Accommodation: "🏨", Other: "📎" };
 const FILTERS = ["Pending", "All", "Approved", "Rejected"];
@@ -102,6 +103,21 @@ export function ReimbursementApprovals() {
                   <div style={{ fontSize: 11, color: TOKENS.danger, marginTop: 4, fontWeight: 600 }}>
                     Reason: {r.rejectReason}
                   </div>
+                )}
+                {r.receiptUrl && (
+                  <a
+                    href={getImageUrl(r.receiptUrl)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 5, marginTop: 8,
+                      background: `${TOKENS.navyDeep}10`, border: `1px solid ${TOKENS.border}`,
+                      borderRadius: 8, padding: "4px 10px", fontSize: 11, fontWeight: 700,
+                      color: TOKENS.navyDeep, textDecoration: "none",
+                    }}
+                  >
+                    <ExternalLink size={12} /> View Receipt
+                  </a>
                 )}
               </div>
               <div style={{ textAlign: "right" }}>

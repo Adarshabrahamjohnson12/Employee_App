@@ -6,7 +6,9 @@ import { SectionLabel } from "../components/SectionLabel";
 import { StatusPill } from "../components/StatusPill";
 import { captureLocation } from "../hooks/useGPS";
 import { useApp } from "../context/AppContext";
-import { LogIn, LogOut, Clock, MapPin, Navigation, AlertCircle, CheckCircle2, X } from "lucide-react";
+import { formatClientDisplayTime } from "../hooks/useClock";
+import { LogIn, LogOut, Clock, MapPin, Navigation, AlertCircle, CheckCircle2, X, Upload, Camera } from "lucide-react";
+import { api, getImageUrl } from "../api/client";
 
 // ── Sub-tab: Office Check-In ────────────────────────────────────────────────
 function OfficeCheckIn({ emp }) {
@@ -54,12 +56,16 @@ function OfficeCheckIn({ emp }) {
         <GpsPulse capturing={capturing} verified={verified} size={96} />
 
         <div style={{ fontFamily: "Fraunces, serif", fontSize: 18, fontWeight: 600, color: TOKENS.navyDeep, marginTop: 16 }}>
-          {capturing ? "Verifying location…" : verified ? "Location verified ✓" : "Ready to check in"}
+          {capturing
+            ? "Verifying location…"
+            : emp.checkedIn
+            ? "Checked In ✓"
+            : "Ready to check in"}
         </div>
         <div style={{ fontSize: 12, color: TOKENS.muted, marginTop: 4, maxWidth: 260 }}>
           {capturing
             ? "Confirming you're at an approved site — hold on."
-            : verified
+            : emp.checkedIn
             ? "Your check-in has been geo-tagged and timestamped for your manager."
             : "Tap below to capture your GPS coordinates and log attendance."}
         </div>
@@ -114,21 +120,73 @@ function OfficeCheckIn({ emp }) {
 
       <SectionLabel>Today's log</SectionLabel>
       <Card style={{ padding: 0 }}>
-        {[
-          { label: "Checked in", time: emp.checkInTime || (emp.checkedIn ? "Checked In" : "—"), Icon: LogIn, color: emp.checkedIn ? TOKENS.success : TOKENS.muted },
-          { label: "Lunch break", time: "1:02 PM – 1:38 PM", Icon: Clock, color: TOKENS.muted },
-          { label: "Checked out", time: emp.checkedIn ? "In progress" : "—", Icon: LogOut, color: TOKENS.muted },
-        ].map((row, i) => (
+        {(() => {
+          const checkInRaw = emp.checkInTime || (emp.checkedIn ? "Checked In" : "—");
+          const checkInVal = formatClientDisplayTime(checkInRaw);
+
+          const checkOutRaw = emp.checkedIn
+            ? "In progress"
+            : (emp.checkOutTime || (emp.checkInTime ? "Checked Out" : "—"));
+          const checkOutVal = formatClientDisplayTime(checkOutRaw);
+
+          return [
+            {
+              label: "Checked in",
+              time: checkInVal,
+              Icon: LogIn,
+              color: emp.checkInTime || emp.checkedIn ? TOKENS.success : TOKENS.muted
+            },
+            {
+              label: "Checked out",
+              time: checkOutVal,
+              Icon: LogOut,
+              color: !emp.checkedIn && emp.checkInTime ? TOKENS.danger : TOKENS.muted
+            },
+          ];
+        })().map((row, i) => (
           <div key={i} style={{
             display: "flex", alignItems: "center", gap: 10, padding: "13px 16px",
-            borderBottom: i < 2 ? `1px solid ${TOKENS.border}` : "none",
+            borderBottom: i === 0 ? `1px solid ${TOKENS.border}` : "none",
           }}>
             <row.Icon size={16} color={row.color} />
             <div style={{ flex: 1, fontSize: 13, fontWeight: 600, color: TOKENS.ink }}>{row.label}</div>
-            <div style={{ fontSize: 12, color: TOKENS.muted }}>{row.time}</div>
+            <div style={{ fontSize: 12, color: row.time === "In progress" ? TOKENS.warning : TOKENS.muted }}>{row.time}</div>
           </div>
         ))}
       </Card>
+    </div>
+  );
+}
+
+// ── Photo Upload Form ──────────────────────────────────────────────────────
+function PhotoUploadForm({ odId, state, onChange, onUpload, onCancel }) {
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) onChange({ file, previewUrl: URL.createObjectURL(file) });
+  };
+  return (
+    <div style={{ background: TOKENS.cream, borderRadius: 10, padding: 12 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color: TOKENS.navyDeep }}>📷 Add Project Photo</span>
+        <button onClick={onCancel} style={{ border: "none", background: "none", cursor: "pointer" }}><X size={14} color={TOKENS.muted} /></button>
+      </div>
+      {state.previewUrl && (
+        <img src={state.previewUrl} alt="preview" style={{ width: "100%", maxHeight: 120, objectFit: "cover", borderRadius: 8, marginBottom: 8 }} />
+      )}
+      <input type="file" accept="image/*" onChange={handleFileChange} style={{ fontSize: 12, marginBottom: 8 }} />
+      <input
+        placeholder="Caption (optional)"
+        value={state.caption || ""}
+        onChange={(e) => onChange({ caption: e.target.value })}
+        style={{ width: "100%", padding: "7px 10px", borderRadius: 8, border: `1.5px solid ${TOKENS.border}`, fontSize: 12, color: TOKENS.ink, outline: "none", background: "#fff", marginBottom: 8 }}
+      />
+      <button
+        onClick={() => onUpload(state.file, state.caption)}
+        disabled={!state.file || state.uploading}
+        style={{ width: "100%", background: TOKENS.navyDeep, color: "#fff", border: "none", borderRadius: 8, padding: "8px", fontWeight: 700, fontSize: 12, cursor: state.file && !state.uploading ? "pointer" : "not-allowed", opacity: state.file && !state.uploading ? 1 : 0.6 }}
+      >
+        {state.uploading ? "Uploading…" : <><Upload size={12} /> Upload Photo</>}
+      </button>
     </div>
   );
 }
@@ -146,6 +204,29 @@ function ODStatus({ emp }) {
   const [markingId, setMarkingId] = useState(null);
   const [capturing, setCapturing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Photo upload state: { [odId]: { uploading, photos, caption } }
+  const [photoStates, setPhotoStates] = useState({});
+  const [showPhotoForm, setShowPhotoForm] = useState({});
+
+  const setPhotoState = (odId, patch) =>
+    setPhotoStates(prev => ({ ...prev, [odId]: { ...prev[odId], ...patch } }));
+
+  const handleUploadPhoto = async (odId, file, caption) => {
+    if (!file) return;
+    setPhotoState(odId, { uploading: true });
+    try {
+      const fd = new FormData();
+      fd.append("photo", file);
+      fd.append("caption", caption || "");
+      await api.post(`/od/${odId}/photos`, fd, { headers: { "Content-Type": "multipart/form-data" } });
+      setShowPhotoForm(prev => ({ ...prev, [odId]: false }));
+    } catch (err) {
+      console.error("Photo upload error:", err);
+    } finally {
+      setPhotoState(odId, { uploading: false, caption: "", file: null });
+    }
+  };
 
   const handleDeclare = async (e) => {
     if (e) e.preventDefault();
@@ -202,17 +283,15 @@ function ODStatus({ emp }) {
           {emp.onOD ? `Currently on OD — ${emp.odCity || emp.lastLocation}` : "Not on OD today"}
         </div>
         <div style={{ fontSize: 12, color: TOKENS.muted, marginTop: 4 }}>
-          {emp.onOD ? "Tap an OD record below to mark arrival with GPS." : "Declare an OD trip to track your city visits."}
+          {emp.onOD ? "You can declare additional ODs below." : "Declare an OD trip to track your city visits."}
         </div>
-        {!emp.onOD && (
-          <button onClick={() => setShowForm(true)} style={{
-            marginTop: 14, background: TOKENS.blue, color: "#fff", border: "none",
-            borderRadius: 12, padding: "10px 20px", fontWeight: 700, fontSize: 13,
-            display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer",
-          }}>
-            <Navigation size={15} /> Declare OD trip
-          </button>
-        )}
+        <button onClick={() => setShowForm(v => !v)} style={{
+          marginTop: 14, background: TOKENS.blue, color: "#fff", border: "none",
+          borderRadius: 12, padding: "10px 20px", fontWeight: 700, fontSize: 13,
+          display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer",
+        }}>
+          <Navigation size={15} /> {showForm ? "Cancel" : "Declare New OD Trip"}
+        </button>
       </Card>
 
       {/* OD declaration form */}
@@ -276,49 +355,92 @@ function ODStatus({ emp }) {
         </Card>
       )}
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {(emp.odHistory || []).map((od) => (
-          <Card key={od.id} style={{ padding: 14 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 14, color: TOKENS.ink }}>
-                  📍 {od.city}
+        {(emp.odHistory || []).map((od) => {
+          const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+          const isCompleted = od.isCompleted || (od.to && todayStr > od.to);
+          const statusKey = od.statusKey || (isCompleted ? "od-completed" : od.arrived ? "arrived" : "od-active");
+
+          return (
+            <Card key={od.id} style={{ padding: 14 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 14, color: TOKENS.ink }}>
+                    📍 {od.city}
+                  </div>
+                  <div style={{ fontSize: 12, color: TOKENS.muted, marginTop: 2 }}>
+                    {od.client} · {od.from} → {od.to}
+                  </div>
                 </div>
-                <div style={{ fontSize: 12, color: TOKENS.muted, marginTop: 2 }}>
-                  {od.client} · {od.from} → {od.to}
+                <StatusPill status={statusKey} />
+              </div>
+              {isCompleted ? (
+                <div style={{
+                  marginTop: 10, display: "flex", alignItems: "center", gap: 6,
+                  background: TOKENS.successBg, borderRadius: 8, padding: "7px 10px",
+                }}>
+                  <CheckCircle2 size={14} color={TOKENS.success} />
+                  <span style={{ fontSize: 12, color: TOKENS.success, fontWeight: 600 }}>
+                    OD Completed on {od.to} ✓
+                  </span>
                 </div>
+              ) : od.arrived ? (
+                <div style={{
+                  marginTop: 10, display: "flex", alignItems: "center", gap: 6,
+                  background: TOKENS.successBg, borderRadius: 8, padding: "7px 10px",
+                }}>
+                  <CheckCircle2 size={14} color={TOKENS.success} />
+                  <span style={{ fontSize: 12, color: TOKENS.success, fontWeight: 600 }}>
+                    Arrived at {od.arrivalLocation} · {od.arrivalTime}
+                  </span>
+                </div>
+              ) : (
+                <button
+                  onClick={() => handleArrived(od.id)}
+                  disabled={capturing && markingId === od.id}
+                  style={{
+                    marginTop: 10, width: "100%", background: TOKENS.navyDeep,
+                    color: "#fff", border: "none", borderRadius: 9, padding: "9px 12px",
+                    fontWeight: 700, fontSize: 12, display: "flex", alignItems: "center",
+                    justifyContent: "center", gap: 6, cursor: "pointer",
+                    opacity: capturing && markingId === od.id ? 0.7 : 1,
+                  }}
+                >
+                  {capturing && markingId === od.id
+                    ? <><span style={{ animation: "spin 1s linear infinite", display: "inline-block" }}>⟳</span> Capturing GPS…</>
+                    : <><Navigation size={13} /> Mark as Arrived</>
+                  }
+                </button>
+              )}
+
+              {/* Project Photo Upload */}
+              <div style={{ marginTop: 10, borderTop: `1px solid ${TOKENS.border}`, paddingTop: 10 }}>
+                {showPhotoForm[od.id] ? (
+                  <div>
+                    <PhotoUploadForm
+                      odId={od.id}
+                      state={photoStates[od.id] || {}}
+                      onChange={(patch) => setPhotoState(od.id, patch)}
+                      onUpload={(file, caption) => handleUploadPhoto(od.id, file, caption)}
+                      onCancel={() => setShowPhotoForm(prev => ({ ...prev, [od.id]: false }))}
+                    />
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowPhotoForm(prev => ({ ...prev, [od.id]: true }))}
+                    style={{
+                      width: "100%", background: "#fff", color: TOKENS.navyDeep,
+                      border: `1.5px solid ${TOKENS.border}`, borderRadius: 9, padding: "8px 12px",
+                      fontWeight: 700, fontSize: 12, display: "flex", alignItems: "center",
+                      justifyContent: "center", gap: 6, cursor: "pointer",
+                    }}
+                  >
+                    <Camera size={13} /> Add Project Photo
+                  </button>
+                )}
               </div>
-              <StatusPill status={od.arrived ? "arrived" : "not-arrived"} />
-            </div>
-            {od.arrived ? (
-              <div style={{
-                marginTop: 10, display: "flex", alignItems: "center", gap: 6,
-                background: TOKENS.successBg, borderRadius: 8, padding: "7px 10px",
-              }}>
-                <CheckCircle2 size={14} color={TOKENS.success} />
-                <span style={{ fontSize: 12, color: TOKENS.success, fontWeight: 600 }}>
-                  Arrived at {od.arrivalLocation} · {od.arrivalTime}
-                </span>
-              </div>
-            ) : (
-              <button
-                onClick={() => handleArrived(od.id)}
-                disabled={capturing && markingId === od.id}
-                style={{
-                  marginTop: 10, width: "100%", background: TOKENS.navyDeep,
-                  color: "#fff", border: "none", borderRadius: 9, padding: "9px 12px",
-                  fontWeight: 700, fontSize: 12, display: "flex", alignItems: "center",
-                  justifyContent: "center", gap: 6, cursor: "pointer",
-                  opacity: capturing && markingId === od.id ? 0.7 : 1,
-                }}
-              >
-                {capturing && markingId === od.id
-                  ? <><span style={{ animation: "spin 1s linear infinite", display: "inline-block" }}>⟳</span> Capturing GPS…</>
-                  : <><Navigation size={13} /> Mark as Arrived</>
-                }
-              </button>
-            )}
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
       </div>
     </div>
   );

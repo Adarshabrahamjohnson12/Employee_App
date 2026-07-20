@@ -4,6 +4,7 @@ import { Card } from "../components/Card";
 import { SectionLabel } from "../components/SectionLabel";
 import { StatusPill } from "../components/StatusPill";
 import { useApp } from "../context/AppContext";
+import { formatClientDisplayTime } from "../hooks/useClock";
 import { AlertTriangle, MapPin, ChevronRight } from "lucide-react";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid
@@ -31,7 +32,7 @@ export function OverviewScreen({ onSelectEmp }) {
   // Alerts
   const alerts = [
     ...team.filter((e) => !e.checkedIn && !e.onOD).map((e) => ({
-      type: "absent", name: e.name, msg: `Not checked in · Last seen ${e.lastSeen}`,
+      type: "absent", name: e.name, msg: `Not checked in · Last seen ${formatClientDisplayTime(e.lastSeen)}`,
     })),
     ...team.filter((e) => e.onOD && (e.odHistory || []).some((od) => !od.arrived)).map((e) => ({
       type: "od-pending", name: e.name, msg: `On OD in ${e.odCity} — arrival not confirmed`,

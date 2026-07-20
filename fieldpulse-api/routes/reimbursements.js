@@ -11,7 +11,14 @@ router.get("/", auth, async (req, res) => {
     const rows = req.user.role === "manager"
       ? all(db, `SELECT r.*, e.name as emp_name, e.initials FROM reimbursements r JOIN employees e ON r.employee_id=e.employee_id ORDER BY r.created_at DESC`)
       : all(db, `SELECT * FROM reimbursements WHERE employee_id=? ORDER BY created_at DESC`, [req.user.employeeId]);
-    res.json({ data: rows.map(r => ({ ...r, approvedBy: r.approved_by, rejectReason: r.reject_reason, empName: r.emp_name, empInitials: r.initials })) });
+    res.json({ data: rows.map(r => ({
+      ...r,
+      approvedBy: r.approved_by,
+      rejectReason: r.reject_reason,
+      empName: r.emp_name,
+      empInitials: r.initials,
+      receiptUrl: r.receipt_path ? `/uploads/${path.basename(r.receipt_path)}` : null,
+    })) });
   } catch (err) { console.error(err); res.status(500).json({ error: "Server error" }); }
 });
 

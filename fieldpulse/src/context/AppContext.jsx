@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import api from "../api/client";
-import { fmtTime } from "../hooks/useClock";
+import { fmtTime, getTopClockTime } from "../hooks/useClock";
 
 const AppContext = createContext(null);
 
@@ -113,13 +113,22 @@ export function AppProvider({ children }) {
 
   // ── Employee actions ───────────────────────────────────────────────────────
   const doCheckIn = useCallback(async (location) => {
-    await api.post("/checkin", { lat: location.lat, lng: location.lng, accuracy: location.accuracy, city: location.city, isRealGps: location.real });
+    const checkInTime = getTopClockTime();
+    await api.post("/checkin", {
+      lat: location.lat,
+      lng: location.lng,
+      accuracy: location.accuracy,
+      city: location.city,
+      isRealGps: location.real,
+      checkInTime
+    });
     await loadEmployeeData(currentUser.employeeId);
     await refreshTeam();
   }, [currentUser, loadEmployeeData, refreshTeam]);
 
   const doCheckOut = useCallback(async () => {
-    await api.post("/checkin/out");
+    const checkOutTime = getTopClockTime();
+    await api.post("/checkin/out", { checkOutTime });
     await loadEmployeeData(currentUser.employeeId);
     await refreshTeam();
   }, [currentUser, loadEmployeeData, refreshTeam]);
@@ -167,7 +176,10 @@ export function AppProvider({ children }) {
   }, [currentUser, loadEmployeeData]);
 
   const updateProfile = useCallback(async (field, fileOrValue) => {
-    if (field === "aadhaarFront" || field === "aadhaarBack") {
+    if (typeof field === "object") {
+      await api.patch(`/employees/${currentUser.employeeId}`, field);
+      await refreshTeam();
+    } else if (field === "aadhaarFront" || field === "aadhaarBack") {
       const formData = new FormData();
       let fileObj = fileOrValue;
       if (typeof fileOrValue === "string" && fileOrValue.startsWith("data:")) {
@@ -179,6 +191,7 @@ export function AppProvider({ children }) {
       await api.post(`/employees/${currentUser.employeeId}/aadhaar`, formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
+      await refreshTeam();
     } else if (field === "selfie") {
       const formData = new FormData();
       let fileObj = fileOrValue;
@@ -190,11 +203,13 @@ export function AppProvider({ children }) {
       await api.post(`/employees/${currentUser.employeeId}/selfie`, formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
+      await refreshTeam();
     } else {
       await api.patch(`/employees/${currentUser.employeeId}`, { [field]: fileOrValue });
+      await refreshTeam();
     }
     await loadEmployeeData(currentUser.employeeId);
-  }, [currentUser, loadEmployeeData]);
+  }, [currentUser, loadEmployeeData, refreshTeam]);
 
   // ── Manager actions ───────────────────────────────────────────────────────
   const assignTask = useCallback(async (taskData) => {
@@ -215,6 +230,23 @@ export function AppProvider({ children }) {
   const resetEmployeePassword = useCallback(async (empId, password) => {
     await api.patch(`/employees/${empId}/reset-password`, { password });
   }, []);
+
+  // ── Leave actions ────────────────────────────────────────────────────────────
+  const applyLeave = useCallback(async (leaveData) => {
+    await api.post("/leaves", leaveData);
+    if (currentUser?.role === "employee") await loadEmployeeData(currentUser.employeeId);
+    await refreshTeam();
+  }, [currentUser, loadEmployeeData, refreshTeam]);
+
+  const fetchLeaves = useCallback(async () => {
+    const res = await api.get("/leaves");
+    return res.data;
+  }, []);
+
+  const updateLeave = useCallback(async (leaveId, status, rejectReason) => {
+    await api.patch(`/leaves/${leaveId}`, { status, rejectReason });
+    await loadTeamData();
+  }, [loadTeamData]);
 
   // ── Daily Work Reports actions ───────────────────────────────────────────
   const submitDailyReport = useCallback(async (reportData) => {
@@ -256,6 +288,7 @@ export function AppProvider({ children }) {
     refreshEmployee, refreshTeam,
     resetEmployeePassword,
     submitDailyReport, fetchMyDailyReports, fetchAllDailyReports, fetchCalendarSummary,
+    applyLeave, fetchLeaves, updateLeave,
   };
 
 

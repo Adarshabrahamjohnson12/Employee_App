@@ -102,8 +102,22 @@ export function TasksScreen({ emp }) {
                   <span style={{ fontSize: 12, color: TOKENS.muted }}>{t.location}</span>
                 </div>
                 <div style={{ fontSize: 11.5, color: TOKENS.muted, marginTop: 3 }}>
-                  Ref: {t.clientRef} · {t.distance}
+                  Ref: {t.clientRef || t.client_ref} · {t.distance}
                 </div>
+                {(t.client_name || t.clientName || t.project_name || t.projectName) && (
+                  <div style={{ display: "flex", gap: 6, marginTop: 5, flexWrap: "wrap" }}>
+                    {(t.client_name || t.clientName) && (
+                      <span style={{ background: `${TOKENS.navyDeep}10`, color: TOKENS.navyDeep, borderRadius: 6, padding: "2px 8px", fontSize: 10.5, fontWeight: 700 }}>
+                        👤 {t.client_name || t.clientName}
+                      </span>
+                    )}
+                    {(t.project_name || t.projectName) && (
+                      <span style={{ background: `${TOKENS.gold}18`, color: TOKENS.navyDeep, borderRadius: 6, padding: "2px 8px", fontSize: 10.5, fontWeight: 700 }}>
+                        📁 {t.project_name || t.projectName}
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
               <StatusPill status={t.status} />
             </div>

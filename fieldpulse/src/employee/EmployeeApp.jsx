@@ -10,14 +10,16 @@ import { ReimbursementScreen } from "./ReimbursementScreen";
 import { ProfileScreen } from "./ProfileScreen";
 import { EverydayReportScreen } from "./EverydayReportScreen";
 import { getImageUrl } from "../api/client";
-import { Home, MapPin, FileText, ListChecks, DollarSign, User, LogOut, Clock } from "lucide-react";
+import { Home, MapPin, FileText, ListChecks, Wallet, User, LogOut, Clock, CalendarDays } from "lucide-react";
+import { LeaveScreen } from "./LeaveScreen";
 
 const TABS = [
   { id: "dashboard",     label: "Home",     Icon: Home },
   { id: "checkin",       label: "Check In", Icon: MapPin },
+  { id: "leave",         label: "Leave",    Icon: CalendarDays },
   { id: "report",        label: "Report",   Icon: FileText },
   { id: "tasks",         label: "Tasks",    Icon: ListChecks },
-  { id: "reimbursement", label: "Expense",  Icon: DollarSign },
+  { id: "reimbursement", label: "Expense",  Icon: Wallet },
   { id: "profile",       label: "Profile",  Icon: User },
 ];
 
@@ -76,6 +78,7 @@ export function EmployeeApp() {
           <div key={tab} className="screen-enter">
             {tab === "dashboard"     && <DashboardScreen     emp={emp} goTab={setTab} />}
             {tab === "checkin"       && <CheckInScreen       emp={emp} />}
+            {tab === "leave"         && <LeaveScreen         emp={emp} />}
             {tab === "report"        && <EverydayReportScreen />}
             {tab === "tasks"         && <TasksScreen         emp={emp} />}
             {tab === "reimbursement" && <ReimbursementScreen emp={emp} />}
@@ -179,6 +182,7 @@ export function EmployeeApp() {
           <div key={tab} className="screen-enter">
             {tab === "dashboard"     && <DashboardScreen     emp={emp} goTab={setTab} />}
             {tab === "checkin"       && <CheckInScreen       emp={emp} />}
+            {tab === "leave"         && <LeaveScreen         emp={emp} />}
             {tab === "report"        && <EverydayReportScreen />}
             {tab === "tasks"         && <TasksScreen         emp={emp} />}
             {tab === "reimbursement" && <ReimbursementScreen emp={emp} />}

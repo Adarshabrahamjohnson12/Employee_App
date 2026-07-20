@@ -88,12 +88,50 @@ CREATE TABLE IF NOT EXISTS tasks (
   status TEXT DEFAULT 'pending',
   time TEXT,
   client_ref TEXT,
+  client_name TEXT,
+  project_name TEXT,
   completion_status TEXT,
   completion_team TEXT,
   completion_remarks TEXT,
   completion_lat REAL,
   completion_lng REAL,
   completed_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS leave_balance (
+  employee_id TEXT PRIMARY KEY,
+  cl_total INTEGER DEFAULT 12,
+  cl_used INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS leave_applications (
+  id TEXT PRIMARY KEY,
+  employee_id TEXT NOT NULL,
+  leave_type TEXT DEFAULT 'CL',
+  from_date TEXT NOT NULL,
+  to_date TEXT NOT NULL,
+  reason TEXT,
+  status TEXT DEFAULT 'pending',
+  reviewed_by TEXT,
+  reject_reason TEXT,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS od_photos (
+  id TEXT PRIMARY KEY,
+  od_id TEXT NOT NULL,
+  employee_id TEXT NOT NULL,
+  file_path TEXT NOT NULL,
+  caption TEXT,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS employee_attachments (
+  id TEXT PRIMARY KEY,
+  employee_id TEXT NOT NULL,
+  file_path TEXT NOT NULL,
+  caption TEXT,
+  created_at TEXT DEFAULT (datetime('now'))
 );
 
 CREATE TABLE IF NOT EXISTS reimbursements (
@@ -168,6 +206,9 @@ async function getDb() {
   try { db.run("ALTER TABLE tasks ADD COLUMN completion_status TEXT;"); } catch(e){}
   try { db.run("ALTER TABLE tasks ADD COLUMN completion_team TEXT;"); } catch(e){}
   try { db.run("ALTER TABLE tasks ADD COLUMN completion_remarks TEXT;"); } catch(e){}
+  try { db.run("ALTER TABLE tasks ADD COLUMN client_name TEXT;"); } catch(e){}
+  try { db.run("ALTER TABLE tasks ADD COLUMN project_name TEXT;"); } catch(e){}
+  try { db.run("ALTER TABLE employees ADD COLUMN check_out_time TEXT;"); } catch(e){}
   try {
     db.run(`CREATE TABLE IF NOT EXISTS daily_reports (
       id TEXT PRIMARY KEY,
@@ -179,6 +220,13 @@ async function getDb() {
       remarks TEXT,
       submitted_at TEXT DEFAULT (datetime('now'))
     )`);
+  } catch(e){}
+  // Ensure leave_balance row exists for all employees
+  try {
+    const emps = all(db, 'SELECT employee_id FROM employees');
+    for (const e of emps) {
+      db.run(`INSERT OR IGNORE INTO leave_balance (employee_id, cl_total, cl_used) VALUES (?,12,0)`, [e.employee_id]);
+    }
   } catch(e){}
   saveDb();
   return db;
