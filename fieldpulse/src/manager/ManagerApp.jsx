@@ -9,13 +9,13 @@ import { EmployeeDetailScreen } from "./EmployeeDetailScreen";
 import { ReimbursementApprovals } from "./ReimbursementApprovals";
 import { AttendanceScreen } from "./AttendanceScreen";
 import { ManagerReportsCalendarScreen } from "./ManagerReportsCalendarScreen";
-import { BarChart3, Users, CalendarDays, DollarSign, Calendar, LogOut, Clock, ChevronLeft } from "lucide-react";
+import { BarChart3, Users, CalendarDays, Wallet, Calendar, LogOut, Clock, ChevronLeft } from "lucide-react";
 
 const TABS = [
   { id: "overview",      label: "Overview",      Icon: BarChart3 },
   { id: "team",          label: "Team",          Icon: Users },
   { id: "reports",       label: "Daily Reports", Icon: CalendarDays },
-  { id: "reimbursement", label: "Expenses",      Icon: DollarSign },
+  { id: "reimbursement", label: "Expenses",      Icon: Wallet },
   { id: "attendance",    label: "Attendance",    Icon: Calendar },
 ];
 
