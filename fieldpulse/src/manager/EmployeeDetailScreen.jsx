@@ -676,7 +676,7 @@ export function EmployeeDetailScreen({ empId, onBack }) {
                 <div style={{ fontFamily: "Fraunces, serif", fontSize: 36, fontWeight: 700, color: TOKENS.gold, lineHeight: 1.1 }}>
                   {emp.performanceIndex ?? emp.score ?? "—"}%
                 </div>
-                <div style={{ fontSize: 12, color: "#9FB0C9", marginTop: 4 }}>Based on hours · tasks · reports · OD</div>
+                <div style={{ fontSize: 12, color: "#9FB0C9", marginTop: 4 }}>5% OD · 31.67% Hours, Tasks & Reports</div>
               </div>
               <div style={{ textAlign: "center" }}>
                 {(emp.performanceIndex ?? emp.score ?? 0) >= 90 ? (
@@ -693,15 +693,15 @@ export function EmployeeDetailScreen({ empId, onBack }) {
             {/* Factor breakdown */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 14 }}>
               {[
-                { label: "Hours (9hr/day)", icon: "⏱️" },
-                { label: "Tasks Done", icon: "✅" },
-                { label: "Daily Reports", icon: "📋" },
-                { label: "OD Coverage", icon: "✈️" },
-              ].map(({ label, icon }) => (
+                { label: "Hours (9hr/day)", icon: "⏱️", weight: "31.67% weight" },
+                { label: "Tasks Done", icon: "✅", weight: "31.67% weight" },
+                { label: "Daily Reports", icon: "📋", weight: "31.67% weight" },
+                { label: "OD Coverage", icon: "✈️", weight: "5% weight" },
+              ].map(({ label, icon, weight }) => (
                 <div key={label} style={{ background: "rgba(255,255,255,0.08)", borderRadius: 10, padding: "8px 12px" }}>
                   <div style={{ fontSize: 12 }}>{icon}</div>
                   <div style={{ fontSize: 10.5, color: "#9FB0C9", marginTop: 3 }}>{label}</div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginTop: 2 }}>25% weight</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginTop: 2 }}>{weight}</div>
                 </div>
               ))}
             </div>

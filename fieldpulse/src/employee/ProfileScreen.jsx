@@ -234,7 +234,7 @@ export function ProfileScreen({ emp }) {
             <div style={{ fontFamily: "Fraunces, serif", fontSize: 36, fontWeight: 700, color: TOKENS.gold, lineHeight: 1.1 }}>
               {emp.performanceIndex ?? emp.score ?? 0}%
             </div>
-            <div style={{ fontSize: 11.5, color: "#9FB0C9", marginTop: 4 }}>Calculated on 4 equal 25% weighted metrics</div>
+            <div style={{ fontSize: 11.5, color: "#9FB0C9", marginTop: 4 }}>5% for ODs & 31.67% equal split for Hours, Tasks & Reports</div>
           </div>
           <div style={{ textAlign: "right" }}>
             <PerformanceGauge score={emp.performanceIndex ?? emp.score ?? 0} size={76} label="Performance" />
@@ -273,16 +273,16 @@ export function ProfileScreen({ emp }) {
         {/* 4 Factor Breakdown */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 14 }}>
           {[
-            { label: "Hours (9hr/day)", icon: "⏱️", sub: "Must complete 9 hrs daily" },
-            { label: "Tasks Status", icon: "✅", sub: "On-time task submission" },
-            { label: "Daily Reports", icon: "📋", sub: "Work report submitted" },
-            { label: "OD Coverage", icon: "✈️", sub: "Verified OD & arrival" },
-          ].map(({ label, icon, sub }) => (
+            { label: "Hours (9hr/day)", icon: "⏱️", sub: "Must complete 9 hrs daily", weight: "31.67% Weight" },
+            { label: "Tasks Status", icon: "✅", sub: "On-time task submission", weight: "31.67% Weight" },
+            { label: "Daily Reports", icon: "📋", sub: "Work report submitted", weight: "31.67% Weight" },
+            { label: "OD Coverage", icon: "✈️", sub: "Verified OD & arrival", weight: "5% Weight" },
+          ].map(({ label, icon, sub, weight }) => (
             <div key={label} style={{ background: "rgba(255,255,255,0.08)", borderRadius: 10, padding: "10px 12px" }}>
               <div style={{ fontSize: 14 }}>{icon}</div>
               <div style={{ fontSize: 11, fontWeight: 700, color: "#fff", marginTop: 4 }}>{label}</div>
               <div style={{ fontSize: 10, color: "#9FB0C9", marginTop: 1 }}>{sub}</div>
-              <div style={{ fontSize: 10.5, fontWeight: 700, color: TOKENS.gold, marginTop: 3 }}>25% Weight</div>
+              <div style={{ fontSize: 10.5, fontWeight: 700, color: TOKENS.gold, marginTop: 3 }}>{weight}</div>
             </div>
           ))}
         </div>

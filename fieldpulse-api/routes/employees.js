@@ -66,7 +66,10 @@ function buildEmployee(db, emp) {
     return acc + days;
   }, 0);
   const odFactor = Math.min(1, odDays / workdays);
-  const performanceIndex = Math.round((hoursFactor + tasksFactor + reportsFactor + odFactor) * 25);
+  // Performance Index (5% weight for ODs, remaining 95% split equally across Hours, Tasks, Reports => 31.67% each)
+  const odWeight = 0.05;
+  const otherWeight = (1.0 - odWeight) / 3; // 0.31666666666666665
+  const performanceIndex = Math.round((hoursFactor * otherWeight + tasksFactor * otherWeight + reportsFactor * otherWeight + odFactor * odWeight) * 100);
   const benefitsEligible = performanceIndex >= 90;
 
   // Find if employee has an UNCOMPLETED active OD for today
