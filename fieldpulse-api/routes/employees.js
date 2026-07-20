@@ -17,15 +17,16 @@ function buildEmployee(db, emp) {
   const tasks = all(db, `SELECT * FROM tasks WHERE employee_id = ?`, [emp.employee_id]);
   const checkins = all(db, `SELECT * FROM checkins WHERE employee_id = ? ORDER BY timestamp DESC LIMIT 20`, [emp.employee_id]);
   const reports = all(db, `SELECT * FROM daily_reports WHERE employee_id = ? ORDER BY date DESC`, [emp.employee_id]);
-  const currentMonth = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }).slice(0, 7);
+  const currentYear = new Date().getFullYear();
   let leaveBal = get(db, `SELECT * FROM leave_balance WHERE employee_id = ?`, [emp.employee_id]);
   if (!leaveBal) {
-    run(db, `INSERT INTO leave_balance (employee_id, cl_total, cl_used, last_reset_month) VALUES (?,12,0,?)`, [emp.employee_id, currentMonth]);
-    leaveBal = { cl_total: 12, cl_used: 0, last_reset_month: currentMonth };
-  } else if (leaveBal.last_reset_month !== currentMonth) {
-    run(db, `UPDATE leave_balance SET cl_used = 0, last_reset_month = ? WHERE employee_id = ?`, [currentMonth, emp.employee_id]);
+    run(db, `INSERT INTO leave_balance (employee_id, cl_total, cl_used, ml_total, ml_used, last_reset_year) VALUES (?,6,0,6,0,?)`, [emp.employee_id, currentYear]);
+    leaveBal = { cl_total: 6, cl_used: 0, ml_total: 6, ml_used: 0, last_reset_year: currentYear };
+  } else if (leaveBal.last_reset_year !== currentYear) {
+    run(db, `UPDATE leave_balance SET cl_used = 0, ml_used = 0, cl_total = 6, ml_total = 6, last_reset_year = ? WHERE employee_id = ?`, [currentYear, emp.employee_id]);
     leaveBal.cl_used = 0;
-    leaveBal.last_reset_month = currentMonth;
+    leaveBal.ml_used = 0;
+    leaveBal.last_reset_year = currentYear;
   }
   const leaveApps = all(db, `SELECT * FROM leave_applications WHERE employee_id = ? ORDER BY created_at DESC`, [emp.employee_id]);
   const attachments = all(db, `SELECT * FROM employee_attachments WHERE employee_id = ? ORDER BY created_at DESC`, [emp.employee_id]);
@@ -180,7 +181,19 @@ function buildEmployee(db, emp) {
     tasks: tasks,
     performanceIndex,
     benefitsEligible,
-    leaveBalance: { total: leaveBal.cl_total, used: leaveBal.cl_used, remaining: leaveBal.cl_total - leaveBal.cl_used },
+    leaveBalance: (() => {
+      const clTotal = leaveBal.cl_total ?? 6;
+      const clUsed = leaveBal.cl_used ?? 0;
+      const mlTotal = leaveBal.ml_total ?? 6;
+      const mlUsed = leaveBal.ml_used ?? 0;
+      return {
+        total: clTotal + mlTotal, // 12
+        used: clUsed + mlUsed,
+        remaining: (clTotal - clUsed) + (mlTotal - mlUsed),
+        clTotal, clUsed, clRemaining: clTotal - clUsed,
+        mlTotal, mlUsed, mlRemaining: mlTotal - mlUsed,
+      };
+    })(),
     leaveApplications: leaveApps.map(a => ({ ...a, rejectReason: a.reject_reason, from: a.from_date, to: a.to_date })),
     attachments: attachments.map(a => ({ ...a, url: `/uploads/${path.basename(a.file_path)}` })),
     aadhaar: { front: emp.aadhaar_front_path ? `/uploads/${path.basename(emp.aadhaar_front_path)}` : null, back: emp.aadhaar_back_path ? `/uploads/${path.basename(emp.aadhaar_back_path)}` : null },

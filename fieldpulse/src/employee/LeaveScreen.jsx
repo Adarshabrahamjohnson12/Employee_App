@@ -6,7 +6,10 @@ import { StatusPill } from "../components/StatusPill";
 import { useApp } from "../context/AppContext";
 import { CalendarDays, Plus, X, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 
-const LEAVE_TYPES = ["CL", "SL", "EL"];
+const LEAVE_TYPES = [
+  { id: "CL", label: "Casual Leave (CL)" },
+  { id: "ML", label: "Medical Leave (ML)" },
+];
 
 function countDays(from, to) {
   if (!from || !to) return 0;
@@ -16,7 +19,11 @@ function countDays(from, to) {
 
 export function LeaveScreen({ emp }) {
   const { applyLeave, fetchLeaves } = useApp();
-  const [balance, setBalance] = useState(emp.leaveBalance || { total: 12, used: 0, remaining: 12 });
+  const [balance, setBalance] = useState(emp.leaveBalance || {
+    total: 12, used: 0, remaining: 12,
+    clTotal: 6, clUsed: 0, clRemaining: 6,
+    mlTotal: 6, mlUsed: 0, mlRemaining: 6
+  });
   const [applications, setApplications] = useState(emp.leaveApplications || []);
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -65,22 +72,39 @@ export function LeaveScreen({ emp }) {
     }
   };
 
-  const statusColor = { pending: TOKENS.warning, approved: TOKENS.success, rejected: TOKENS.danger };
-
   return (
     <div>
+      {/* Yearly Allowance Banner */}
+      <Card style={{ background: `linear-gradient(135deg, ${TOKENS.navyDeep}, ${TOKENS.navySoft})`, color: "#fff", padding: "14px 16px", marginBottom: 14 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "#9FB0C9", letterSpacing: 0.5 }}>ANNUAL LEAVE ALLOWANCE</div>
+        <div style={{ fontFamily: "Fraunces, serif", fontSize: 22, fontWeight: 700, color: TOKENS.gold, marginTop: 2 }}>
+          12 Days / Year
+        </div>
+        <div style={{ fontSize: 11.5, color: "#9FB0C9", marginTop: 3 }}>
+          6 Casual Leaves (CL) + 6 Medical Leaves (ML)
+        </div>
+      </Card>
+
       {/* Balance Cards */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-        {[
-          { label: "TOTAL CL", value: balance.total, color: TOKENS.navyDeep },
-          { label: "USED",     value: balance.used,  color: TOKENS.warning },
-          { label: "REMAINING",value: balance.remaining, color: TOKENS.success },
-        ].map(({ label, value, color }) => (
-          <Card key={label} style={{ flex: 1, padding: 14, textAlign: "center" }}>
-            <div style={{ fontFamily: "Fraunces, serif", fontSize: 26, fontWeight: 700, color }}>{value}</div>
-            <div style={{ fontSize: 10, color: TOKENS.muted, marginTop: 2, letterSpacing: 0.5 }}>{label}</div>
-          </Card>
-        ))}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
+        <Card style={{ padding: 12, textAlign: "center" }}>
+          <div style={{ fontFamily: "Fraunces, serif", fontSize: 22, fontWeight: 700, color: TOKENS.navyDeep }}>
+            {balance.clRemaining ?? (6 - (balance.clUsed || 0))}/6
+          </div>
+          <div style={{ fontSize: 9.5, color: TOKENS.muted, marginTop: 2, fontWeight: 700 }}>CL REMAINING</div>
+        </Card>
+        <Card style={{ padding: 12, textAlign: "center" }}>
+          <div style={{ fontFamily: "Fraunces, serif", fontSize: 22, fontWeight: 700, color: TOKENS.navyDeep }}>
+            {balance.mlRemaining ?? (6 - (balance.mlUsed || 0))}/6
+          </div>
+          <div style={{ fontSize: 9.5, color: TOKENS.muted, marginTop: 2, fontWeight: 700 }}>ML REMAINING</div>
+        </Card>
+        <Card style={{ padding: 12, textAlign: "center" }}>
+          <div style={{ fontFamily: "Fraunces, serif", fontSize: 22, fontWeight: 700, color: TOKENS.success }}>
+            {balance.remaining ?? 12}
+          </div>
+          <div style={{ fontSize: 9.5, color: TOKENS.muted, marginTop: 2, fontWeight: 700 }}>TOTAL LEFT</div>
+        </Card>
       </div>
 
       {/* Success / Error */}
@@ -103,7 +127,7 @@ export function LeaveScreen({ emp }) {
           fontWeight: 700, fontSize: 13.5, display: "flex", alignItems: "center",
           justifyContent: "center", gap: 8, cursor: "pointer", marginBottom: 16,
         }}>
-          <Plus size={17} /> Apply for Casual Leave
+          <Plus size={17} /> Apply for Leave (CL / ML)
         </button>
       )}
 
@@ -123,12 +147,12 @@ export function LeaveScreen({ emp }) {
             <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 6 }}>LEAVE TYPE</label>
             <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
               {LEAVE_TYPES.map(lt => (
-                <button key={lt} type="button" onClick={() => setForm(f => ({ ...f, leaveType: lt }))} style={{
-                  padding: "6px 16px", borderRadius: 10, border: `1.5px solid ${form.leaveType === lt ? TOKENS.navyDeep : TOKENS.border}`,
-                  background: form.leaveType === lt ? TOKENS.navyDeep : "#fff",
-                  color: form.leaveType === lt ? "#fff" : TOKENS.ink,
+                <button key={lt.id} type="button" onClick={() => setForm(f => ({ ...f, leaveType: lt.id }))} style={{
+                  flex: 1, padding: "8px 12px", borderRadius: 10, border: `1.5px solid ${form.leaveType === lt.id ? TOKENS.navyDeep : TOKENS.border}`,
+                  background: form.leaveType === lt.id ? TOKENS.navyDeep : "#fff",
+                  color: form.leaveType === lt.id ? "#fff" : TOKENS.ink,
                   fontSize: 12, fontWeight: 700, cursor: "pointer",
-                }}>{lt}</button>
+                }}>{lt.label}</button>
               ))}
             </div>
 

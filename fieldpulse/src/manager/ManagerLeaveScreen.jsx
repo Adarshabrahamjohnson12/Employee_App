@@ -162,7 +162,7 @@ export function ManagerLeaveScreen() {
                         {l.emp_name || l.employee_id}
                       </div>
                       <div style={{ fontSize: 11, color: TOKENS.muted, marginTop: 1 }}>
-                        Emp ID: {l.employee_id} {l.cl_total ? `· CL Balance: ${l.cl_total - l.cl_used}/${l.cl_total}` : ""}
+                        Emp ID: {l.employee_id} {l.cl_total !== undefined ? `· CL: ${l.cl_total - l.cl_used}/${l.cl_total} · ML: ${(l.ml_total ?? 6) - (l.ml_used ?? 0)}/${l.ml_total ?? 6}` : ""}
                       </div>
                     </div>
                   </div>
@@ -181,7 +181,7 @@ export function ManagerLeaveScreen() {
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                     <span style={{ fontSize: 12, fontWeight: 700, color: TOKENS.navyDeep }}>
-                      🌴 {l.leave_type || l.leaveType || "Casual Leave (CL)"}
+                      {(l.leave_type || l.leaveType || "CL").toUpperCase() === "ML" ? "🏥 Medical Leave (ML)" : "🌴 Casual Leave (CL)"}
                     </span>
                     <span style={{ fontSize: 11.5, fontWeight: 700, color: TOKENS.gold, background: `${TOKENS.navyDeep}12`, padding: "2px 8px", borderRadius: 6 }}>
                       {numDays} {numDays === 1 ? "Day" : "Days"}

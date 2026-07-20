@@ -100,8 +100,11 @@ CREATE TABLE IF NOT EXISTS tasks (
 
 CREATE TABLE IF NOT EXISTS leave_balance (
   employee_id TEXT PRIMARY KEY,
-  cl_total INTEGER DEFAULT 12,
-  cl_used INTEGER DEFAULT 0
+  cl_total INTEGER DEFAULT 6,
+  cl_used INTEGER DEFAULT 0,
+  ml_total INTEGER DEFAULT 6,
+  ml_used INTEGER DEFAULT 0,
+  last_reset_year INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS leave_applications (
@@ -222,14 +225,18 @@ async function getDb() {
     )`);
   } catch(e){}
   try { db.run("ALTER TABLE leave_balance ADD COLUMN last_reset_month TEXT;"); } catch(e){}
+  try { db.run("ALTER TABLE leave_balance ADD COLUMN ml_total INTEGER DEFAULT 6;"); } catch(e){}
+  try { db.run("ALTER TABLE leave_balance ADD COLUMN ml_used INTEGER DEFAULT 0;"); } catch(e){}
+  try { db.run("ALTER TABLE leave_balance ADD COLUMN last_reset_year INTEGER;"); } catch(e){}
+  try { db.run("UPDATE leave_balance SET cl_total = 6 WHERE cl_total = 12 OR cl_total IS NULL;"); } catch(e){}
   try { db.run("ALTER TABLE od_records ADD COLUMN completed INTEGER DEFAULT 0;"); } catch(e){}
   try { db.run("ALTER TABLE od_records ADD COLUMN completed_time TEXT;"); } catch(e){}
   // Ensure leave_balance row exists for all employees
   try {
-    const currentMonth = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }).slice(0, 7);
+    const currentYear = new Date().getFullYear();
     const emps = all(db, 'SELECT employee_id FROM employees');
     for (const e of emps) {
-      db.run(`INSERT OR IGNORE INTO leave_balance (employee_id, cl_total, cl_used, last_reset_month) VALUES (?,12,0,?)`, [e.employee_id, currentMonth]);
+      db.run(`INSERT OR IGNORE INTO leave_balance (employee_id, cl_total, cl_used, ml_total, ml_used, last_reset_year) VALUES (?,6,0,6,0,?)`, [e.employee_id, currentYear]);
     }
   } catch(e){}
   saveDb();
