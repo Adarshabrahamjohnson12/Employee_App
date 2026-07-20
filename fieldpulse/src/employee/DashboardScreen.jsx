@@ -6,7 +6,7 @@ import { PerformanceGauge } from "../components/PerformanceGauge";
 import { StatusPill } from "../components/StatusPill";
 import { useApp } from "../context/AppContext";
 import {
-  Zap, ListChecks, LogIn, CheckCircle2, Circle, MapPin
+  Zap, ListChecks, LogIn, CheckCircle2, Circle, MapPin, Star, AlertCircle
 } from "lucide-react";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid
@@ -24,6 +24,8 @@ export function DashboardScreen({ emp, goTab }) {
     hrs: emp.weeklyHours?.[i] ?? 0,
     target: day === "Sat" ? 5 : day === "Sun" ? 0 : 8,
   }));
+
+  const perfIndex = emp.performanceIndex ?? emp.score ?? 0;
 
   return (
     <div>
@@ -91,7 +93,7 @@ export function DashboardScreen({ emp, goTab }) {
       {/* Gauge + stats row */}
       <div style={{ display: "flex", gap: 12, marginTop: 16 }}>
         <Card style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center", padding: 12 }}>
-          <PerformanceGauge score={emp.score} size={124} />
+          <PerformanceGauge score={perfIndex} size={124} label="Performance" />
         </Card>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
           <Card style={{ padding: 14 }}>
@@ -114,6 +116,35 @@ export function DashboardScreen({ emp, goTab }) {
             </div>
           </Card>
         </div>
+      </div>
+
+      {/* Benefits Status Banner */}
+      <div style={{ marginTop: 12 }}>
+        {perfIndex >= 90 ? (
+          <div style={{
+            background: TOKENS.successBg, border: `1px solid ${TOKENS.success}`,
+            borderRadius: 14, padding: "10px 14px", fontSize: 12, fontWeight: 700,
+            color: TOKENS.success, display: "flex", alignItems: "center", justifyContent: "space-between"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <Star size={16} fill={TOKENS.success} color={TOKENS.success} />
+              <span>Performance: {perfIndex}% · Eligible for Benefits</span>
+            </div>
+            <span style={{ fontSize: 11, background: TOKENS.success, color: "#fff", padding: "2px 8px", borderRadius: 8 }}>≥90% ✓</span>
+          </div>
+        ) : (
+          <div style={{
+            background: `${TOKENS.danger}15`, border: `1px solid ${TOKENS.danger}44`,
+            borderRadius: 14, padding: "10px 14px", fontSize: 12, fontWeight: 700,
+            color: TOKENS.danger, display: "flex", alignItems: "center", justifyContent: "space-between"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <AlertCircle size={16} color={TOKENS.danger} />
+              <span>Performance: {perfIndex}% · Below 90% Threshold</span>
+            </div>
+            <span style={{ fontSize: 11, background: TOKENS.danger, color: "#fff", padding: "2px 8px", borderRadius: 8 }}>Need 90%</span>
+          </div>
+        )}
       </div>
 
       {/* Weekly hours */}

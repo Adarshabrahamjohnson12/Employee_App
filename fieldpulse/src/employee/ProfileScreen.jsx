@@ -6,7 +6,8 @@ import { PerformanceGauge } from "../components/PerformanceGauge";
 import { useApp } from "../context/AppContext";
 import { getImageUrl } from "../api/client";
 import { is18Plus, validatePhone, validateEmail } from "../utils/validation";
-import { Camera, Upload, Award, Zap, ListChecks, Calendar, Briefcase, Phone, Heart, Edit3, Save, X, Check } from "lucide-react";
+import { Camera, Upload, Award, Zap, ListChecks, Calendar, Briefcase, Phone, Heart, Edit3, Save, X, Check, Star, TrendingUp, AlertCircle } from "lucide-react";
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 
 function InfoRow({ label, value, color }) {
   return (
@@ -222,6 +223,89 @@ export function ProfileScreen({ emp }) {
           <Check size={16} color={TOKENS.success} /> Profile details saved and synced with manager!
         </div>
       )}
+
+      {/* Performance & Score Index Section */}
+      <SectionLabel>Performance & Score Index</SectionLabel>
+      <Card style={{ background: `linear-gradient(135deg, ${TOKENS.navyDeep}, ${TOKENS.navySoft})`, padding: 18, marginBottom: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#9FB0C9", letterSpacing: 0.5 }}>PERFORMANCE INDEX</div>
+            <div style={{ fontFamily: "Fraunces, serif", fontSize: 36, fontWeight: 700, color: TOKENS.gold, lineHeight: 1.1 }}>
+              {emp.performanceIndex ?? emp.score ?? 0}%
+            </div>
+            <div style={{ fontSize: 11.5, color: "#9FB0C9", marginTop: 4 }}>Calculated on 4 equal 25% weighted metrics</div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <PerformanceGauge score={emp.performanceIndex ?? emp.score ?? 0} size={76} label="Performance" />
+          </div>
+        </div>
+
+        {/* Benefits Eligibility Status */}
+        <div style={{ marginTop: 14 }}>
+          {(emp.performanceIndex ?? emp.score ?? 0) >= 90 ? (
+            <div style={{
+              background: TOKENS.successBg, border: `1px solid ${TOKENS.success}`,
+              borderRadius: 12, padding: "8px 14px", fontSize: 12, fontWeight: 700,
+              color: TOKENS.success, display: "flex", alignItems: "center", gap: 8
+            }}>
+              <Star size={16} fill={TOKENS.success} color={TOKENS.success} />
+              <div>
+                <div>Eligible for Benefits (≥ 90%)</div>
+                <div style={{ fontSize: 10.5, fontWeight: 500, opacity: 0.9 }}>Great job! You qualify for performance incentives.</div>
+              </div>
+            </div>
+          ) : (
+            <div style={{
+              background: `${TOKENS.danger}20`, border: `1px solid ${TOKENS.danger}55`,
+              borderRadius: 12, padding: "8px 14px", fontSize: 12, fontWeight: 700,
+              color: "#FFB0B0", display: "flex", alignItems: "center", gap: 8
+            }}>
+              <AlertCircle size={16} color="#FFB0B0" />
+              <div>
+                <div>Below 90% Threshold ({emp.performanceIndex ?? emp.score ?? 0}%)</div>
+                <div style={{ fontSize: 10.5, fontWeight: 500, opacity: 0.9 }}>Must reach 90% performance index to unlock benefits.</div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* 4 Factor Breakdown */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 14 }}>
+          {[
+            { label: "Hours (9hr/day)", icon: "⏱️", sub: "Must complete 9 hrs daily" },
+            { label: "Tasks Status", icon: "✅", sub: "On-time task submission" },
+            { label: "Daily Reports", icon: "📋", sub: "Work report submitted" },
+            { label: "OD Coverage", icon: "✈️", sub: "Verified OD & arrival" },
+          ].map(({ label, icon, sub }) => (
+            <div key={label} style={{ background: "rgba(255,255,255,0.08)", borderRadius: 10, padding: "10px 12px" }}>
+              <div style={{ fontSize: 14 }}>{icon}</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#fff", marginTop: 4 }}>{label}</div>
+              <div style={{ fontSize: 10, color: "#9FB0C9", marginTop: 1 }}>{sub}</div>
+              <div style={{ fontSize: 10.5, fontWeight: 700, color: TOKENS.gold, marginTop: 3 }}>25% Weight</div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* Punctuality Trend Chart */}
+      <Card style={{ padding: "14px 12px 10px", marginBottom: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+          <TrendingUp size={15} color={TOKENS.navyDeep} />
+          <span style={{ fontSize: 13, fontWeight: 700, color: TOKENS.navyDeep }}>Shift Punctuality Trend (7 Days)</span>
+        </div>
+        <ResponsiveContainer width="100%" height={120}>
+          <LineChart data={emp.punctualityTrend || []}>
+            <CartesianGrid vertical={false} stroke="#F0ECE1" />
+            <XAxis dataKey="day" tick={{ fontSize: 10, fill: TOKENS.muted }} axisLine={false} tickLine={false} />
+            <YAxis hide />
+            <Tooltip contentStyle={{ fontFamily: "Inter", fontSize: 12, borderRadius: 10, border: `1px solid ${TOKENS.border}` }} />
+            <Line type="monotone" dataKey="min" stroke={TOKENS.gold} strokeWidth={2.5} dot={{ r: 4, fill: TOKENS.navyDeep }} />
+          </LineChart>
+        </ResponsiveContainer>
+        <div style={{ fontSize: 11, color: TOKENS.muted, textAlign: "center", marginTop: 4 }}>
+          Minutes early (–) or late (+) relative to 9:00 AM shift start
+        </div>
+      </Card>
 
       {/* Personal info section */}
       <SectionLabel
