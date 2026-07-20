@@ -84,6 +84,10 @@ export function AppProvider({ children }) {
   }, [currentUser]);
 
   const loadEmployeeData = useCallback(async (empId) => {
+    if (!empId) {
+      logout();
+      return;
+    }
     setLoading(true);
     try {
       const [empRes, taskRes] = await Promise.all([
@@ -92,9 +96,13 @@ export function AppProvider({ children }) {
       ]);
       setEmployee(empRes.data.data);
       setTasks(taskRes.data.data);
-    } catch (err) { console.error("Load employee error:", err); }
-    finally { setLoading(false); }
-  }, []);
+    } catch (err) {
+      console.error("Load employee error:", err);
+      if (err.response?.status === 404 || err.response?.status === 401 || err.response?.status === 403) {
+        logout();
+      }
+    } finally { setLoading(false); }
+  }, [logout]);
 
   const loadTeamData = useCallback(async () => {
     setLoading(true);
