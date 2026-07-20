@@ -34,10 +34,6 @@ router.post("/out", auth, async (req, res) => {
     run(db, `INSERT INTO checkins (employee_id, type, lat, lng, accuracy, city, is_real_gps, timestamp, date) VALUES (?,?,?,?,?,?,?,?,?)`,
       [req.user.employeeId, "out", null, null, null, null, 0, time, today]);
 
-    try {
-      run(db, `ALTER TABLE employees ADD COLUMN check_out_time TEXT`);
-    } catch (e) {}
-
     run(db, `UPDATE employees SET checked_in=0, check_out_time=? WHERE employee_id=?`,
       [time, req.user.employeeId]);
 
