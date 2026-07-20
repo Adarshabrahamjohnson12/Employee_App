@@ -112,23 +112,27 @@ export function AppProvider({ children }) {
   const refreshTeam = useCallback(() => { loadTeamData(); }, [loadTeamData]);
 
   // ── Employee actions ───────────────────────────────────────────────────────
+  const getDeviceTime = () => new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
+  const getDeviceFullTime = () => `${getDeviceTime()}, ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}`;
+
   const doCheckIn = useCallback(async (location) => {
-    const checkInTime = getTopClockTime();
+    const checkInTime = getDeviceTime();
     await api.post("/checkin", {
       lat: location.lat,
       lng: location.lng,
       accuracy: location.accuracy,
       city: location.city,
       isRealGps: location.real,
-      checkInTime
+      checkInTime,
+      deviceTime: checkInTime
     });
     await loadEmployeeData(currentUser.employeeId);
     await refreshTeam();
   }, [currentUser, loadEmployeeData, refreshTeam]);
 
   const doCheckOut = useCallback(async () => {
-    const checkOutTime = getTopClockTime();
-    await api.post("/checkin/out", { checkOutTime });
+    const checkOutTime = getDeviceTime();
+    await api.post("/checkin/out", { checkOutTime, deviceTime: checkOutTime });
     await loadEmployeeData(currentUser.employeeId);
     await refreshTeam();
   }, [currentUser, loadEmployeeData, refreshTeam]);
@@ -140,24 +144,28 @@ export function AppProvider({ children }) {
   }, [currentUser, loadEmployeeData, refreshTeam]);
 
   const markODArrived = useCallback(async (odId, location) => {
-    await api.patch(`/od/${odId}/arrive`, { lat: location.lat, lng: location.lng, city: location.city });
+    const deviceTime = getDeviceTime();
+    await api.patch(`/od/${odId}/arrive`, { lat: location.lat, lng: location.lng, city: location.city, deviceTime, arrivalTime: deviceTime });
     await loadEmployeeData(currentUser.employeeId);
     await refreshTeam();
   }, [currentUser, loadEmployeeData, refreshTeam]);
 
   const completeOD = useCallback(async (odId) => {
-    await api.patch(`/od/${odId}/complete`);
+    const deviceTime = getDeviceFullTime();
+    await api.patch(`/od/${odId}/complete`, { deviceTime, completedTime: deviceTime });
     await loadEmployeeData(currentUser.employeeId);
     await refreshTeam();
   }, [currentUser, loadEmployeeData, refreshTeam]);
 
   const completeTask = useCallback(async (taskId, location, report) => {
+    const deviceTime = getDeviceTime();
     await api.patch(`/tasks/${taskId}/complete`, {
       lat: location?.lat,
       lng: location?.lng,
       status: report?.status,
       team: report?.team,
-      remarks: report?.remarks
+      remarks: report?.remarks,
+      deviceTime
     });
     await loadEmployeeData(currentUser.employeeId);
   }, [currentUser, loadEmployeeData]);

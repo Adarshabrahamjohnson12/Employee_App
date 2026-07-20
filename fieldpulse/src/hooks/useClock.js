@@ -48,33 +48,6 @@ export function getTopClockTime(d = new Date()) {
 }
 
 export function formatClientDisplayTime(str) {
-  if (!str || typeof str !== "string") return str;
-
-  const match = str.match(/^(\d{1,2}):(\d{2})\s*(am|pm)(.*)$/i);
-  if (!match) return str;
-
-  let [_, hStr, mStr, ampm, rest] = match;
-  let h = parseInt(hStr, 10);
-  let m = parseInt(mStr, 10);
-
-  if (ampm.toLowerCase() === "pm" && h < 12) h += 12;
-  if (ampm.toLowerCase() === "am" && h === 12) h = 0;
-
-  if (h >= 12 && h <= 19) {
-    h = h + 5;
-    m = m + 30;
-    if (m >= 60) {
-      h += 1;
-      m -= 60;
-    }
-    h = h % 24;
-    const newAmpm = h >= 12 ? "pm" : "am";
-    let displayH = h % 12;
-    if (displayH === 0) displayH = 12;
-    const finalH = displayH.toString().padStart(2, "0");
-    const finalM = m.toString().padStart(2, "0");
-    return `${finalH}:${finalM} ${newAmpm}${rest || ""}`;
-  }
-
+  if (!str || typeof str !== "string") return str || "—";
   return str;
 }

@@ -5,10 +5,10 @@ const { getDb, run, get, all } = require("../database/db");
 // POST /api/checkin
 router.post("/", auth, async (req, res) => {
   try {
-    const { lat, lng, accuracy, city, isRealGps, checkInTime } = req.body || {};
+    const { lat, lng, accuracy, city, isRealGps, checkInTime, deviceTime } = req.body || {};
     const db = await getDb();
     const today = new Date().toISOString().slice(0, 10);
-    const time = checkInTime || "Checked In";
+    const time = deviceTime || checkInTime || "Checked In";
 
     run(db, `INSERT INTO checkins (employee_id, type, lat, lng, accuracy, city, is_real_gps, timestamp, date) VALUES (?,?,?,?,?,?,?,?,?)`,
       [req.user.employeeId, "in", lat, lng, accuracy || null, city || null, isRealGps ? 1 : 0, time, today]);
@@ -26,10 +26,10 @@ router.post("/", auth, async (req, res) => {
 // POST /api/checkin/out
 router.post("/out", auth, async (req, res) => {
   try {
-    const { checkOutTime } = req.body || {};
+    const { checkOutTime, deviceTime } = req.body || {};
     const db = await getDb();
     const today = new Date().toISOString().slice(0, 10);
-    const time = checkOutTime || "Checked Out";
+    const time = deviceTime || checkOutTime || "Checked Out";
 
     run(db, `INSERT INTO checkins (employee_id, type, lat, lng, accuracy, city, is_real_gps, timestamp, date) VALUES (?,?,?,?,?,?,?,?,?)`,
       [req.user.employeeId, "out", null, null, null, null, 0, time, today]);

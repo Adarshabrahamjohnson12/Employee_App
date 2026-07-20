@@ -30,8 +30,8 @@ router.post("/", auth, async (req, res) => {
 // PATCH /api/od/:id/arrive — mark arrived with GPS
 router.patch("/:id/arrive", auth, async (req, res) => {
   try {
-    const { lat, lng, city } = req.body;
-    const time = new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+    const { lat, lng, city, deviceTime, arrivalTime } = req.body || {};
+    const time = deviceTime || arrivalTime || new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
     const db = await getDb();
     run(db, `UPDATE od_records SET arrived=1, arrival_location=?, arrival_lat=?, arrival_lng=?, arrival_time=? WHERE id=? AND employee_id=?`,
       [city || "On location", lat || null, lng || null, time, req.params.id, req.user.employeeId]);
@@ -43,9 +43,10 @@ router.patch("/:id/arrive", auth, async (req, res) => {
 // PATCH /api/od/:id/complete — mark OD over / completed
 router.patch("/:id/complete", auth, async (req, res) => {
   try {
-    const time = new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
-    const dateStr = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
-    const completedTimeStr = `${time}, ${dateStr}`;
+    const { deviceTime, completedTime } = req.body || {};
+    const fallbackTime = new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+    const fallbackDate = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
+    const completedTimeStr = deviceTime || completedTime || `${fallbackTime}, ${fallbackDate}`;
     const db = await getDb();
     run(db, `UPDATE od_records SET completed=1, completed_time=? WHERE id=? AND employee_id=?`,
       [completedTimeStr, req.params.id, req.user.employeeId]);

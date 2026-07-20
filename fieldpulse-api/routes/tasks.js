@@ -31,8 +31,8 @@ router.post("/", auth, async (req, res) => {
 // PATCH /api/tasks/:id/complete
 router.patch("/:id/complete", auth, async (req, res) => {
   try {
-    const { lat, lng, status, team, remarks } = req.body;
-    const time = new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+    const { lat, lng, status, team, remarks, deviceTime } = req.body || {};
+    const time = deviceTime || new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
     const db = await getDb();
     
     run(db, `UPDATE tasks SET status='done', time=?, completion_lat=?, completion_lng=?, completion_status=?, completion_team=?, completion_remarks=?, completed_at=datetime('now') WHERE id=? AND employee_id=?`,
