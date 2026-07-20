@@ -50,7 +50,19 @@ router.patch("/:id/complete", auth, async (req, res) => {
     const db = await getDb();
     run(db, `UPDATE od_records SET completed=1, completed_time=? WHERE id=? AND employee_id=?`,
       [completedTimeStr, req.params.id, req.user.employeeId]);
-    res.json({ message: "OD completed", completedTime: completedTimeStr });
+
+    // Check remaining uncompleted active ODs for today
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const activeRemaining = get(db, `SELECT * FROM od_records WHERE employee_id=? AND (completed IS NULL OR completed=0) AND from_date<=? AND ?<=to_date`,
+      [req.user.employeeId, todayStr, todayStr]);
+
+    if (!activeRemaining) {
+      run(db, `UPDATE employees SET on_od=0, od_city=NULL WHERE employee_id=?`, [req.user.employeeId]);
+    } else {
+      run(db, `UPDATE employees SET on_od=1, od_city=? WHERE employee_id=?`, [activeRemaining.city, req.user.employeeId]);
+    }
+
+    res.json({ message: "OD completed", completedTime: completedTimeStr, onOD: !!activeRemaining });
   } catch (err) { console.error(err); res.status(500).json({ error: "Server error" }); }
 });
 

@@ -68,18 +68,16 @@ function buildEmployee(db, emp) {
   const performanceIndex = Math.round((hoursFactor + tasksFactor + reportsFactor + odFactor) * 25);
   const benefitsEligible = performanceIndex >= 90;
 
-  // Find if employee has an active OD for today
-  const activeOd = od.find(o => o.from_date <= todayStr && todayStr <= o.to_date);
+  // Find if employee has an UNCOMPLETED active OD for today
+  const activeOd = od.find(o => !o.completed && o.from_date <= todayStr && todayStr <= o.to_date);
   const isCurrentlyOnOD = !!activeOd;
   const currentOdCity = activeOd ? activeOd.city : null;
 
   // Sync DB on_od column if needed
-  if (!!emp.on_od !== isCurrentlyOnOD) {
-    try {
-      run(db, `UPDATE employees SET on_od = ?, od_city = ? WHERE employee_id = ?`,
-        [isCurrentlyOnOD ? 1 : 0, currentOdCity, emp.employee_id]);
-    } catch(e){}
-  }
+  try {
+    run(db, `UPDATE employees SET on_od = ?, od_city = ? WHERE employee_id = ?`,
+      [isCurrentlyOnOD ? 1 : 0, isCurrentlyOnOD ? currentOdCity : null, emp.employee_id]);
+  } catch(e){}
 
   return {
     ...emp,
