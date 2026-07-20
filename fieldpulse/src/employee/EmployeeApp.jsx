@@ -138,7 +138,7 @@ export function EmployeeApp() {
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <img src="/goldpe-logo.png" alt="GoldPE Logo" className="logo-glow" style={{ width: 38, height: 38, borderRadius: 10, objectFit: "contain", background: "#fff", padding: 2, boxShadow: `0 4px 12px ${TOKENS.gold}33` }} />
               <div>
-                <div style={{ fontFamily: "Fraunces, serif", fontSize: 20, fontWeight: 700, color: "#fff", lineHeight: 1.1 }}>FieldPulse</div>
+                <div style={{ fontFamily: "Fraunces, serif", fontSize: 20, fontWeight: 700, color: "#fff", lineHeight: 1.1 }}>GoldPE WIBIL</div>
                 <div style={{ fontSize: 9.5, color: TOKENS.goldLight, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginTop: 2 }}>Western Region</div>
               </div>
             </div>
