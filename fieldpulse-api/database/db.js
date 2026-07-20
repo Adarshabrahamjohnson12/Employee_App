@@ -221,11 +221,15 @@ async function getDb() {
       submitted_at TEXT DEFAULT (datetime('now'))
     )`);
   } catch(e){}
+  try { db.run("ALTER TABLE leave_balance ADD COLUMN last_reset_month TEXT;"); } catch(e){}
+  try { db.run("ALTER TABLE od_records ADD COLUMN completed INTEGER DEFAULT 0;"); } catch(e){}
+  try { db.run("ALTER TABLE od_records ADD COLUMN completed_time TEXT;"); } catch(e){}
   // Ensure leave_balance row exists for all employees
   try {
+    const currentMonth = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }).slice(0, 7);
     const emps = all(db, 'SELECT employee_id FROM employees');
     for (const e of emps) {
-      db.run(`INSERT OR IGNORE INTO leave_balance (employee_id, cl_total, cl_used) VALUES (?,12,0)`, [e.employee_id]);
+      db.run(`INSERT OR IGNORE INTO leave_balance (employee_id, cl_total, cl_used, last_reset_month) VALUES (?,12,0,?)`, [e.employee_id, currentMonth]);
     }
   } catch(e){}
   saveDb();

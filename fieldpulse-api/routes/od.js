@@ -10,7 +10,7 @@ router.get("/", auth, async (req, res) => {
     const db = await getDb();
     const empId = req.user.role === "manager" ? req.query.employeeId : req.user.employeeId;
     const rows = all(db, `SELECT * FROM od_records WHERE employee_id=? ORDER BY created_at DESC`, [empId]);
-    res.json({ data: rows.map(o => ({ ...o, arrived: !!o.arrived, arrivalLocation: o.arrival_location, arrivalTime: o.arrival_time, from: o.from_date, to: o.to_date })) });
+    res.json({ data: rows.map(o => ({ ...o, arrived: !!o.arrived, arrivalLocation: o.arrival_location, arrivalTime: o.arrival_time, completed: !!o.completed, completedTime: o.completed_time, from: o.from_date, to: o.to_date })) });
   } catch (err) { console.error(err); res.status(500).json({ error: "Server error" }); }
 });
 
@@ -23,8 +23,7 @@ router.post("/", auth, async (req, res) => {
     const odId = id || `od-${Date.now()}`;
     run(db, `INSERT INTO od_records (id, employee_id, city, client, from_date, to_date) VALUES (?,?,?,?,?,?)`,
       [odId, req.user.employeeId, city, client || null, from, to]);
-    // on_od is computed dynamically in buildEmployee — no manual flag needed
-    res.json({ data: { id: odId, city, client, from, to, arrived: false } });
+    res.json({ data: { id: odId, city, client, from, to, arrived: false, completed: false } });
   } catch (err) { console.error(err); res.status(500).json({ error: "Server error" }); }
 });
 
@@ -38,6 +37,19 @@ router.patch("/:id/arrive", auth, async (req, res) => {
       [city || "On location", lat || null, lng || null, time, req.params.id, req.user.employeeId]);
     run(db, `UPDATE employees SET last_location=?, last_seen=? WHERE employee_id=?`, [city || "On location", time, req.user.employeeId]);
     res.json({ message: "Arrival confirmed", arrivalTime: time, arrivalLocation: city });
+  } catch (err) { console.error(err); res.status(500).json({ error: "Server error" }); }
+});
+
+// PATCH /api/od/:id/complete — mark OD over / completed
+router.patch("/:id/complete", auth, async (req, res) => {
+  try {
+    const time = new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+    const dateStr = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
+    const completedTimeStr = `${time}, ${dateStr}`;
+    const db = await getDb();
+    run(db, `UPDATE od_records SET completed=1, completed_time=? WHERE id=? AND employee_id=?`,
+      [completedTimeStr, req.params.id, req.user.employeeId]);
+    res.json({ message: "OD completed", completedTime: completedTimeStr });
   } catch (err) { console.error(err); res.status(500).json({ error: "Server error" }); }
 });
 

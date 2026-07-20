@@ -17,7 +17,16 @@ function buildEmployee(db, emp) {
   const tasks = all(db, `SELECT * FROM tasks WHERE employee_id = ?`, [emp.employee_id]);
   const checkins = all(db, `SELECT * FROM checkins WHERE employee_id = ? ORDER BY timestamp DESC LIMIT 20`, [emp.employee_id]);
   const reports = all(db, `SELECT * FROM daily_reports WHERE employee_id = ? ORDER BY date DESC`, [emp.employee_id]);
-  const leaveBal = get(db, `SELECT * FROM leave_balance WHERE employee_id = ?`, [emp.employee_id]) || { cl_total: 12, cl_used: 0 };
+  const currentMonth = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }).slice(0, 7);
+  let leaveBal = get(db, `SELECT * FROM leave_balance WHERE employee_id = ?`, [emp.employee_id]);
+  if (!leaveBal) {
+    run(db, `INSERT INTO leave_balance (employee_id, cl_total, cl_used, last_reset_month) VALUES (?,12,0,?)`, [emp.employee_id, currentMonth]);
+    leaveBal = { cl_total: 12, cl_used: 0, last_reset_month: currentMonth };
+  } else if (leaveBal.last_reset_month !== currentMonth) {
+    run(db, `UPDATE leave_balance SET cl_used = 0, last_reset_month = ? WHERE employee_id = ?`, [currentMonth, emp.employee_id]);
+    leaveBal.cl_used = 0;
+    leaveBal.last_reset_month = currentMonth;
+  }
   const leaveApps = all(db, `SELECT * FROM leave_applications WHERE employee_id = ? ORDER BY created_at DESC`, [emp.employee_id]);
   const attachments = all(db, `SELECT * FROM employee_attachments WHERE employee_id = ? ORDER BY created_at DESC`, [emp.employee_id]);
 

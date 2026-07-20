@@ -2,11 +2,15 @@ const router = require("express").Router();
 const auth = require("../middleware/authMiddleware");
 const { getDb, run, get, all } = require("../database/db");
 
-// Ensure leave_balance row exists for an employee
+// Ensure leave_balance row exists for an employee and reset monthly when new month starts
 async function ensureBalance(db, employeeId) {
-  const existing = get(db, `SELECT employee_id FROM leave_balance WHERE employee_id=?`, [employeeId]);
+  const currentMonth = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }).slice(0, 7);
+  const existing = get(db, `SELECT * FROM leave_balance WHERE employee_id=?`, [employeeId]);
   if (!existing) {
-    run(db, `INSERT INTO leave_balance (employee_id, cl_total, cl_used) VALUES (?,12,0)`, [employeeId]);
+    run(db, `INSERT INTO leave_balance (employee_id, cl_total, cl_used, last_reset_month) VALUES (?,12,0,?)`, [employeeId, currentMonth]);
+  } else if (existing.last_reset_month !== currentMonth) {
+    // Month reset: reset cl_used to 0 when a new month arrives
+    run(db, `UPDATE leave_balance SET cl_used = 0, last_reset_month = ? WHERE employee_id = ?`, [currentMonth, employeeId]);
   }
 }
 

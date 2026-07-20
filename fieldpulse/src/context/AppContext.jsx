@@ -145,6 +145,12 @@ export function AppProvider({ children }) {
     await refreshTeam();
   }, [currentUser, loadEmployeeData, refreshTeam]);
 
+  const completeOD = useCallback(async (odId) => {
+    await api.patch(`/od/${odId}/complete`);
+    await loadEmployeeData(currentUser.employeeId);
+    await refreshTeam();
+  }, [currentUser, loadEmployeeData, refreshTeam]);
+
   const completeTask = useCallback(async (taskId, location, report) => {
     await api.patch(`/tasks/${taskId}/complete`, {
       lat: location?.lat,
@@ -280,7 +286,7 @@ export function AppProvider({ children }) {
     login, logout, setupPassword,
     getEmployee,
     doCheckIn, doCheckOut,
-    declareOD, markODArrived,
+    declareOD, markODArrived, completeOD,
     completeTask,
     assignTask, addEmployee,
     addReimbursement, updateReimbursement,

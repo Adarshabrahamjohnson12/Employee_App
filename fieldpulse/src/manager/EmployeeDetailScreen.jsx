@@ -333,28 +333,64 @@ export function EmployeeDetailScreen({ empId, onBack }) {
             <InfoRow label="Joined"      value={emp.joiningDate || emp.joining_date} />
           </Card>
 
-          {/* Aadhaar KYC */}
-          <SectionLabel>KYC Documents</SectionLabel>
+          {/* Aadhaar KYC Upload for Manager */}
+          <SectionLabel>KYC Documents — Aadhaar (Upload & Manage)</SectionLabel>
           <Card>
             <div style={{ display: "flex", gap: 12 }}>
-              {["front", "back"].map((side) => (
-                <div key={side} style={{ flex: 1 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, marginBottom: 6 }}>
-                    AADHAAR {side.toUpperCase()}
+              {["front", "back"].map((side) => {
+                const imgUrl = getImageUrl(emp.aadhaar?.[side]);
+                return (
+                  <div key={side} style={{ flex: 1 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, marginBottom: 6 }}>
+                      AADHAAR {side.toUpperCase()}
+                    </div>
+                    <label style={{
+                      width: "100%", aspectRatio: "3/2", borderRadius: 12,
+                      border: `2px dashed ${TOKENS.navyDeep}`, background: TOKENS.cream,
+                      display: "flex", flexDirection: "column", alignItems: "center",
+                      justifyContent: "center", overflow: "hidden", cursor: "pointer",
+                      position: "relative",
+                    }}>
+                      {imgUrl ? (
+                        <>
+                          <img src={imgUrl} alt={`Aadhaar ${side}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          <div style={{
+                            position: "absolute", bottom: 0, inset: "auto 0 0 0", background: "rgba(10,25,50,0.8)",
+                            color: "#fff", padding: "4px 0", textAlign: "center", fontSize: 10, fontWeight: 700
+                          }}>
+                            📷 Click to Change
+                          </div>
+                        </>
+                      ) : (
+                        <div style={{ textAlign: "center", padding: 8 }}>
+                          <Upload size={18} color={TOKENS.navyDeep} style={{ margin: "0 auto 4px" }} />
+                          <span style={{ fontSize: 11.5, color: TOKENS.navyDeep, fontWeight: 700 }}>Upload {side}</span>
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: "none" }}
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          try {
+                            const fd = new FormData();
+                            fd.append("file", file);
+                            fd.append("side", side);
+                            await api.post(`/employees/${emp.employee_id || emp.id}/aadhaar`, fd, {
+                              headers: { "Content-Type": "multipart/form-data" }
+                            });
+                            await refreshTeam();
+                          } catch (err) {
+                            console.error("Aadhaar upload error:", err);
+                          }
+                        }}
+                      />
+                    </label>
                   </div>
-                  <div style={{
-                    width: "100%", aspectRatio: "3/2", borderRadius: 12,
-                    border: `2px dashed ${TOKENS.border}`, background: TOKENS.cream,
-                    display: "flex", flexDirection: "column", alignItems: "center",
-                    justifyContent: "center", overflow: "hidden",
-                  }}>
-                    {emp.aadhaar?.[side]
-                      ? <img src={getImageUrl(emp.aadhaar[side])} alt={`Aadhaar ${side}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                      : <span style={{ fontSize: 12, color: TOKENS.muted }}>Not uploaded</span>
-                    }
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </Card>
 
@@ -605,13 +641,13 @@ export function EmployeeDetailScreen({ empId, onBack }) {
                     </div>
                     <StatusPill status={statusKey} />
                   </div>
-                  {isCompleted ? (
+                  {od.completed || od.completed_time || isCompleted ? (
                     <div style={{
                       marginTop: 8, display: "flex", alignItems: "center", gap: 6,
                       background: TOKENS.successBg, borderRadius: 8, padding: "6px 10px",
                       fontSize: 12, color: TOKENS.success, fontWeight: 600,
                     }}>
-                      <CheckCircle2 size={13} /> OD Completed on {od.to} ✓
+                      <CheckCircle2 size={13} /> OD Over / Completed at {od.completedTime || od.completed_time || od.to} ✓
                     </div>
                   ) : od.arrived ? (
                     <div style={{

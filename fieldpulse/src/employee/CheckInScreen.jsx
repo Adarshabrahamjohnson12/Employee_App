@@ -193,7 +193,7 @@ function PhotoUploadForm({ odId, state, onChange, onUpload, onCancel }) {
 
 // ── Sub-tab: OD Declaration ─────────────────────────────────────────────────
 function ODStatus({ emp }) {
-  const { declareOD, markODArrived } = useApp();
+  const { declareOD, markODArrived, completeOD } = useApp();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
     city: "",
@@ -202,6 +202,7 @@ function ODStatus({ emp }) {
     to: new Date().toISOString().slice(0, 10)
   });
   const [markingId, setMarkingId] = useState(null);
+  const [completingId, setCompletingId] = useState(null);
   const [capturing, setCapturing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -211,6 +212,17 @@ function ODStatus({ emp }) {
 
   const setPhotoState = (odId, patch) =>
     setPhotoStates(prev => ({ ...prev, [odId]: { ...prev[odId], ...patch } }));
+
+  const handleCompleteOD = async (odId) => {
+    setCompletingId(odId);
+    try {
+      await completeOD(odId);
+    } catch (err) {
+      console.error("Complete OD error:", err);
+    } finally {
+      setCompletingId(null);
+    }
+  };
 
   const handleUploadPhoto = async (odId, file, caption) => {
     if (!file) return;
@@ -373,43 +385,61 @@ function ODStatus({ emp }) {
                 </div>
                 <StatusPill status={statusKey} />
               </div>
-              {isCompleted ? (
+              {od.completed || isCompleted ? (
                 <div style={{
                   marginTop: 10, display: "flex", alignItems: "center", gap: 6,
                   background: TOKENS.successBg, borderRadius: 8, padding: "7px 10px",
                 }}>
                   <CheckCircle2 size={14} color={TOKENS.success} />
                   <span style={{ fontSize: 12, color: TOKENS.success, fontWeight: 600 }}>
-                    OD Completed on {od.to} ✓
-                  </span>
-                </div>
-              ) : od.arrived ? (
-                <div style={{
-                  marginTop: 10, display: "flex", alignItems: "center", gap: 6,
-                  background: TOKENS.successBg, borderRadius: 8, padding: "7px 10px",
-                }}>
-                  <CheckCircle2 size={14} color={TOKENS.success} />
-                  <span style={{ fontSize: 12, color: TOKENS.success, fontWeight: 600 }}>
-                    Arrived at {od.arrivalLocation} · {od.arrivalTime}
+                    OD Over / Completed at {od.completedTime || od.completed_time || od.to} ✓
                   </span>
                 </div>
               ) : (
-                <button
-                  onClick={() => handleArrived(od.id)}
-                  disabled={capturing && markingId === od.id}
-                  style={{
-                    marginTop: 10, width: "100%", background: TOKENS.navyDeep,
-                    color: "#fff", border: "none", borderRadius: 9, padding: "9px 12px",
-                    fontWeight: 700, fontSize: 12, display: "flex", alignItems: "center",
-                    justifyContent: "center", gap: 6, cursor: "pointer",
-                    opacity: capturing && markingId === od.id ? 0.7 : 1,
-                  }}
-                >
-                  {capturing && markingId === od.id
-                    ? <><span style={{ animation: "spin 1s linear infinite", display: "inline-block" }}>⟳</span> Capturing GPS…</>
-                    : <><Navigation size={13} /> Mark as Arrived</>
-                  }
-                </button>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 10 }}>
+                  {od.arrived ? (
+                    <div style={{
+                      display: "flex", alignItems: "center", gap: 6,
+                      background: TOKENS.successBg, borderRadius: 8, padding: "7px 10px",
+                    }}>
+                      <CheckCircle2 size={14} color={TOKENS.success} />
+                      <span style={{ fontSize: 12, color: TOKENS.success, fontWeight: 600 }}>
+                        Arrived at {od.arrivalLocation} · {od.arrivalTime}
+                      </span>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleArrived(od.id)}
+                      disabled={capturing && markingId === od.id}
+                      style={{
+                        width: "100%", background: TOKENS.navyDeep,
+                        color: "#fff", border: "none", borderRadius: 9, padding: "9px 12px",
+                        fontWeight: 700, fontSize: 12, display: "flex", alignItems: "center",
+                        justifyContent: "center", gap: 6, cursor: "pointer",
+                        opacity: capturing && markingId === od.id ? 0.7 : 1,
+                      }}
+                    >
+                      {capturing && markingId === od.id
+                        ? <><span style={{ animation: "spin 1s linear infinite", display: "inline-block" }}>⟳</span> Capturing GPS…</>
+                        : <><Navigation size={13} /> Mark as Arrived</>
+                      }
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => handleCompleteOD(od.id)}
+                    disabled={completingId === od.id}
+                    style={{
+                      width: "100%", background: TOKENS.danger,
+                      color: "#fff", border: "none", borderRadius: 9, padding: "9px 12px",
+                      fontWeight: 700, fontSize: 12, display: "flex", alignItems: "center",
+                      justifyContent: "center", gap: 6, cursor: "pointer",
+                      opacity: completingId === od.id ? 0.7 : 1,
+                    }}
+                  >
+                    <CheckCircle2 size={14} /> OD Over / Completed
+                  </button>
+                </div>
               )}
 
               {/* Project Photo Upload */}

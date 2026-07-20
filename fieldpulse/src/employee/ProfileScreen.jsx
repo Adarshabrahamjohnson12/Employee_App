@@ -369,35 +369,41 @@ export function ProfileScreen({ emp }) {
         <InfoRow label="Joined"       value={emp.joiningDate || emp.joining_date} />
       </Card>
 
-      {/* KYC Documents */}
+      {/* KYC Documents (Read-Only for Employee, Managed by Manager) */}
       <SectionLabel>KYC Documents — Aadhaar</SectionLabel>
-      {uploadError && (
-        <div style={{ color: TOKENS.danger, fontSize: 12, fontWeight: 600, marginBottom: 10, padding: "8px 12px", background: TOKENS.dangerBg, borderRadius: 8 }}>
-          ⚠️ {uploadError}
-        </div>
-      )}
       <Card>
         <div style={{ display: "flex", gap: 12 }}>
-          <PhotoUploader
-            label="AADHAAR FRONT"
-            value={emp.aadhaar?.front}
-            onChange={handleFile("aadhaarFront")}
-            loading={uploadingField === "aadhaarFront"}
-            icon={Upload}
-          />
-          <PhotoUploader
-            label="AADHAAR BACK"
-            value={emp.aadhaar?.back}
-            onChange={handleFile("aadhaarBack")}
-            loading={uploadingField === "aadhaarBack"}
-            icon={Upload}
-          />
+          {["front", "back"].map((side) => {
+            const imgUrl = getImageUrl(emp.aadhaar?.[side]);
+            return (
+              <div key={side} style={{ flex: 1 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, marginBottom: 6 }}>
+                  AADHAAR {side.toUpperCase()}
+                </div>
+                <div style={{
+                  width: "100%", aspectRatio: "3/2", borderRadius: 12,
+                  border: `2px dashed ${TOKENS.border}`, background: TOKENS.cream,
+                  display: "flex", flexDirection: "column", alignItems: "center",
+                  justifyContent: "center", overflow: "hidden",
+                }}>
+                  {imgUrl ? (
+                    <img src={imgUrl} alt={`Aadhaar ${side}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ) : (
+                    <div style={{ textAlign: "center", padding: 8 }}>
+                      <span style={{ fontSize: 11.5, color: TOKENS.muted, fontWeight: 600 }}>Not uploaded</span>
+                      <div style={{ fontSize: 10, color: TOKENS.muted, marginTop: 2 }}>Managed by Manager</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
         <div style={{
-          marginTop: 10, background: `${TOKENS.success}18`, borderRadius: 8,
-          padding: "8px 12px", fontSize: 11.5, color: TOKENS.success, fontWeight: 600,
+          marginTop: 10, background: `${TOKENS.navyDeep}0D`, borderRadius: 8,
+          padding: "8px 12px", fontSize: 11.5, color: TOKENS.navyDeep, fontWeight: 600,
         }}>
-          ✓ KYC documents are synced securely to the FieldPulse regional server.
+          ℹ️ Aadhaar KYC cards can only be uploaded and managed by your Manager.
         </div>
       </Card>
 
