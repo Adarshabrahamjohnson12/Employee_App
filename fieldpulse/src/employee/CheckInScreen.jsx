@@ -193,7 +193,7 @@ function PhotoUploadForm({ odId, state, onChange, onUpload, onCancel }) {
 
 // ── Sub-tab: OD Declaration ─────────────────────────────────────────────────
 function ODStatus({ emp }) {
-  const { declareOD, markODArrived, completeOD } = useApp();
+  const { declareOD, markODArrived, completeOD, loadEmployeeData, refreshTeam, currentUser } = useApp();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
     city: "",
@@ -233,6 +233,10 @@ function ODStatus({ emp }) {
       fd.append("caption", caption || "");
       await api.post(`/od/${odId}/photos`, fd, { headers: { "Content-Type": "multipart/form-data" } });
       setShowPhotoForm(prev => ({ ...prev, [odId]: false }));
+      if (currentUser?.employeeId) {
+        await loadEmployeeData(currentUser.employeeId);
+      }
+      await refreshTeam();
     } catch (err) {
       console.error("Photo upload error:", err);
     } finally {
@@ -321,7 +325,7 @@ function ODStatus({ emp }) {
           <form onSubmit={handleDeclare}>
             {[
               { label: "Destination City *", field: "city", placeholder: "e.g. Pune, Nashik…" },
-              { label: "Client Name", field: "client", placeholder: "Client name" },
+              { label: "Client / Project Name", field: "client", placeholder: "Client or Project Name" },
               { label: "From Date *", field: "from", type: "date" },
               { label: "To Date *", field: "to", type: "date" },
             ].map(({ label, field, placeholder, type }) => (
@@ -439,6 +443,31 @@ function ODStatus({ emp }) {
                   >
                     <CheckCircle2 size={14} /> OD Over / Completed
                   </button>
+                </div>
+              )}
+
+              {/* Uploaded Project Photos */}
+              {od.photos && od.photos.length > 0 && (
+                <div style={{ marginTop: 10, borderTop: `1px dashed ${TOKENS.border}`, paddingTop: 8 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: TOKENS.navyDeep, marginBottom: 6 }}>
+                    📷 Uploaded Project Photos ({od.photos.length})
+                  </div>
+                  <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
+                    {od.photos.map((p, pIdx) => {
+                      const imgUrl = getImageUrl(p.url);
+                      return (
+                        <div key={p.id || pIdx} style={{ flexShrink: 0 }}>
+                          <a href={imgUrl} target="_blank" rel="noopener noreferrer">
+                            <img
+                              src={imgUrl}
+                              alt={p.caption || "OD Photo"}
+                              style={{ width: 64, height: 64, borderRadius: 8, objectFit: "cover", border: `1.5px solid ${TOKENS.border}` }}
+                            />
+                          </a>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
 

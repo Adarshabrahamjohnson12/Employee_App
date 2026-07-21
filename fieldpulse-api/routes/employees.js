@@ -160,6 +160,7 @@ function buildEmployee(db, emp) {
       const isUpcoming = todayStr < o.from_date;
       const statusKey = isCompleted ? "od-completed" : isActive ? (o.arrived ? "arrived" : "od-active") : "od-upcoming";
       const statusLabel = isCompleted ? "OD Completed" : isActive ? (o.arrived ? "Arrived" : "OD Active") : "OD Upcoming";
+      const photos = all(db, `SELECT * FROM od_photos WHERE od_id=? ORDER BY created_at ASC`, [o.id]);
 
       return {
         ...o,
@@ -173,8 +174,16 @@ function buildEmployee(db, emp) {
         arrivalLat: o.arrival_lat,
         arrivalLng: o.arrival_lng,
         arrivalTime: o.arrival_time,
+        completed: !!o.completed,
+        completedTime: o.completed_time,
         from: o.from_date,
-        to: o.to_date
+        to: o.to_date,
+        photos: photos.map(p => ({
+          id: p.id,
+          caption: p.caption,
+          createdAt: p.created_at,
+          url: `/uploads/${path.basename(p.file_path)}`
+        }))
       };
     }),
     attendance: (() => {

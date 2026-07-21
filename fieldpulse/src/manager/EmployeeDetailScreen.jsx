@@ -658,6 +658,36 @@ export function EmployeeDetailScreen({ empId, onBack }) {
                       <CheckCircle2 size={13} /> {od.arrivalLocation} · {formatClientDisplayTime(od.arrivalTime)}
                     </div>
                   ) : null}
+
+                  {/* Attached Project / OD Photos */}
+                  {((od.photos && od.photos.length > 0) || od.photo_url || od.photoUrl) && (
+                    <div style={{ marginTop: 10, borderTop: `1px dashed ${TOKENS.border}`, paddingTop: 8 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: TOKENS.navyDeep, marginBottom: 6, display: "flex", alignItems: "center", gap: 4 }}>
+                        📷 Attached OD Project Photos ({od.photos?.length || 1})
+                      </div>
+                      <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
+                        {(od.photos || [{ url: od.photoUrl || od.photo_url, caption: "Project Photo" }]).map((p, pIdx) => {
+                          const imgUrl = getImageUrl(p.url);
+                          return (
+                            <div key={p.id || pIdx} style={{ flexShrink: 0 }}>
+                              <a href={imgUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
+                                <img
+                                  src={imgUrl}
+                                  alt={p.caption || "OD Photo"}
+                                  style={{ width: 72, height: 72, borderRadius: 10, objectFit: "cover", border: `1.5px solid ${TOKENS.border}` }}
+                                />
+                              </a>
+                              {p.caption && (
+                                <div style={{ fontSize: 10, color: TOKENS.muted, marginTop: 2, maxWidth: 72, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  {p.caption}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </Card>
               );
             })}

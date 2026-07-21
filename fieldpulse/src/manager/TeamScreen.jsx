@@ -491,24 +491,24 @@ export function TeamScreen({ onSelectEmp }) {
               }}
             />
 
-            {/* Client Name */}
+            {/* Client / Project Name */}
             <label style={{ fontSize: 11, fontWeight: 700, color: TOKENS.muted, letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
-              CLIENT NAME / PROJECT
+              CLIENT / PROJECT NAME
             </label>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
-              <input
-                placeholder="Client name"
-                value={taskClientName}
-                onChange={(e) => setTaskClientName(e.target.value)}
-                style={{ padding: "10px 12px", borderRadius: 10, border: `1.5px solid ${TOKENS.border}`, fontSize: 13, background: TOKENS.cream, outline: "none", color: TOKENS.ink }}
-              />
-              <input
-                placeholder="Project name"
-                value={taskProjectName}
-                onChange={(e) => setTaskProjectName(e.target.value)}
-                style={{ padding: "10px 12px", borderRadius: 10, border: `1.5px solid ${TOKENS.border}`, fontSize: 13, background: TOKENS.cream, outline: "none", color: TOKENS.ink }}
-              />
-            </div>
+            <input
+              placeholder="Client or Project Name"
+              value={taskClientName}
+              onChange={(e) => {
+                setTaskClientName(e.target.value);
+                setTaskProjectName(e.target.value);
+              }}
+              style={{
+                width: "100%", padding: "10px 12px", borderRadius: 10,
+                border: `1.5px solid ${TOKENS.border}`, fontSize: 13,
+                background: TOKENS.cream, outline: "none", color: TOKENS.ink,
+                marginBottom: 16,
+              }}
+            />
 
             {errorMsg && (
               <div style={{ color: TOKENS.danger, fontSize: 12, fontWeight: 600, marginBottom: 14 }}>
